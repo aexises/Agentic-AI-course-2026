@@ -31,10 +31,6 @@
 
 Read one chapter, review its presentation, reproduce the core flow from memory, and answer the self-test without notes. Use the exam guide after chapters 3, 7, 10, and 13 as cumulative review.
 
-## Source policy
-
-The factual content is derived only from the supplied course PDFs and the references already included in them. The material has been reorganized, clarified, and expanded as a learning resource without introducing external factual claims. Lecturer and institution identifiers were removed.
-
 ## Rebuild
 
 The Markdown studybook and decks are generated from `presentations/src/course-data.mjs`.
