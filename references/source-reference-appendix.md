@@ -1,7 +1,4 @@
 # Source Reference Appendix
-
-The entries below are transcribed from the reference slides in the supplied PDFs. They are retained as the evidence base for the rewritten studybook and improved presentations. No additional web sources were introduced.
-
 ## 01. From Language Models to Agents
 
 References (1/2)

@@ -2,7 +2,6 @@
 
 From language models to reliable autonomous systems.
 
-This repository is a self-contained learning edition of the supplied course material. It removes lecturer and institution identifiers, consolidates repeated ideas, and converts presentation fragments into a cumulative study narrative. No external facts were added.
 
 ## How to use this studybook
 

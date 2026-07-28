@@ -1,14 +1,12 @@
 # Agentic AI Course
 
-A self-contained, exam-ready course on agentic AI, rebuilt from the supplied presentations and their embedded references.
-
 ## What is included
 
 - [STUDYBOOK.md](STUDYBOOK.md) - the complete conspect in one file
 - [EXAM-GUIDE.md](EXAM-GUIDE.md) - comparisons, diagrams, and high-value design rules
 - [SOURCE-MAP.md](SOURCE-MAP.md) - one-to-one traceability from each supplied PDF
 - [chapters/](chapters/) - 13 focused Markdown chapters
-- [output/presentations/](output/presentations/) - 13 improved, editable PowerPoint decks
+- [output/presentations/](output/presentations/) - 13 editable PowerPoint decks
 - [output/studybook/](output/studybook/) - printable studybook formats
 - [references/source-reference-appendix.md](references/source-reference-appendix.md) - references transcribed from the source slides
 - [presentations/src/](presentations/src/) - reusable presentation source
