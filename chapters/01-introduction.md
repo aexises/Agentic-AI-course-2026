@@ -1,102 +1,73 @@
-# 01. From Language Models to Agents
+# From language models to agents
 
-> Agency appears when an LLM is placed inside a bounded loop with tools, memory, and control logic.
+## A problem before an architecture
 
-## Learning objectives
+Suppose a student asks the equipment service for a camera. A text model can produce a plausible recommendation from the words in the question. That response may be useful, but it does not establish that the camera exists in the university catalog, is available on the requested date, or may be borrowed by this student. These are facts about an environment. The model needs a way to observe that environment, and the application needs rules governing what it may change.
 
-- Define classical and LLM-based agents
-- Distinguish chatbots, workflows, and agents
-- Explain the perceive-reason-act loop
-- Choose the least autonomy that solves a task
+Start by separating the user's intention from a successful outcome. “Help with a camera” expresses an intention. “Return an available item identifier, cite the applicable loan policy, and prepare an uncommitted reservation proposal” is an operational specification. The second statement allows a reviewer to inspect completion. It also prevents the application from interpreting helpfulness as permission to commit a reservation.
 
-## Core notes
+An architecture should follow this specification. If every request consists of an exact item identifier and a date, ordinary database lookup may solve the task. If requests are expressed informally, a model may be useful for extracting fields. If the next query depends on information discovered during execution, a model-directed loop may be justified. Autonomy is a design choice about who selects the next operation, not a quality score.
 
-### The composition changed, not the model paradigm
+## State, observation, action, and policy
 
-A classifier maps text to a label and a chatbot maps conversation to a reply. An agent maps a goal to a sequence of actions in an environment and chooses those actions as the task unfolds. The practical shift is the composition LLM + tools + loop + memory.
+We use four terms precisely. **State** is information relevant to the system at a particular time. **Observation** is information received from the environment. **Action** is an operation the system attempts. **Policy** is a rule for selecting actions from available information. In an LLM application, the model can implement part of the action-selection policy, while application code enforces the allowed action set.
 
-- Instruction following and function calling make outputs executable.
-- Explicit reasoning helps choose and order actions.
-- Context and retrieval carry task state and external evidence.
+Let $s_t$ represent the application's recorded state after step $t$, and let $a_t$ be its proposed next action. A simplified loop is:
 
-### Classical agency still supplies the core definition
+$$
+a_t \sim \pi_{\theta}(\cdot\mid s_t),\qquad o_{t+1}=\operatorname{execute}(a_t),\qquad s_{t+1}=\operatorname{update}(s_t,a_t,o_{t+1}).
+$$
 
-An agent perceives an environment through sensors and acts through actuators. A rational agent selects actions expected to maximize a performance measure given its percepts and knowledge. LLM agents replace a hand-written or learned policy with in-context natural-language reasoning.
+The symbol $\pi_{\theta}$ denotes the model-dependent policy, with parameters $\theta$. The symbol $\sim$ means that the action is drawn from a distribution. This notation does not say that the model knows the true state of the world. The recorded state might contain an inventory observation from ten minutes ago. It might omit another department's reservations. A more complete model would distinguish hidden environmental state from the application's information about it.
 
-- Properties: autonomy, reactivity, pro-activeness, social ability.
-- Hard environments are partially observable, stochastic, dynamic, and sequential.
-- LLM agents gain generality but inherit reliability, cost, and evaluation problems.
+That distinction matters operationally. If an inventory lookup says “one camera available,” the system has observed availability at the time and scope of that lookup. It has not secured the camera. Another user may reserve it before the next action. The reservation service must check availability again when it commits a booking. Reasoning with a recent observation cannot replace transactional validation.
 
-### Four components recur in every implementation
+## Chatbots, workflows, and agents
 
-The profile defines identity, constraints, tools, and output protocol. Memory supplies short- and long-term state. Planning turns goals into steps. Action exposes controlled effects through tools. Frameworks mainly differ in how they wire and persist these parts.
+These categories describe control, and real applications can combine them. A reply-only chatbot produces a response. A workflow follows transitions selected by application code. A model-directed agent can choose its next operation from a permitted set based on the evolving task state. Anthropic's engineering account distinguishes predefined workflows from systems in which models direct their own process and tool use; it recommends beginning with simple implementations [@effective-agents].
 
-- Profile is the behavioral contract.
-- Memory is information re-supplied to a stateless model.
-- Planning selects the next step or an explicit plan.
-- Action is mediated by a validating runtime.
+Consider three equipment applications. The first answers policy questions from text pasted into the conversation. The second always extracts a date, retrieves matching catalog items, checks inventory, and formats a result. The third can decide to clarify an ambiguous date, inspect a different policy, or search another catalog after observing an empty result. The third has more adaptive control, but also more possible trajectories that require testing.
 
-### Agency is a loop, not a single forward pass
+A workflow can contain a model-directed subtask. For example, the overall reservation process may always end at an approval gate, while a bounded search component chooses which catalog query to try next. Describing this as a hybrid is often more useful than arguing whether the whole system deserves the label “agent.” A control-flow diagram should show which transitions are deterministic and which depend on model proposals.
 
-The agent observes the goal and environment, reasons about the next step, acts through a tool, receives a new observation, and repeats until completion or a budget limit. The loop turns model output into state-changing behavior.
+## Turning a goal into a contract
 
-- Observe: user goal, tool results, environment state.
-- Reason: choose the next action from current evidence.
-- Act: request a tool call through the runtime.
-- Stop: final answer, step cap, cost cap, time cap, or human escalation.
+A useful task contract specifies inputs, acceptable outputs, permitted effects, stopping conditions, and uncertainty behavior. For our service, the input includes the user's request and authenticated identity. The output includes candidate items, source references, and a reservation proposal. Read-only catalog access is permitted. A committed reservation requires a separate authorization decision. The run ends on completion, lack of evidence, an unresolved ambiguity, a denied action, or exhausted resources.
 
-### Control flow separates chatbots, workflows, and agents
+Notice that “ask for clarification” and “cannot establish availability” can both be correct terminal outcomes. A system that always returns a confident item name may score well on superficial fluency while violating the real task. Success criteria should reward appropriate abstention when the information needed for a valid decision is missing.
 
-A chatbot produces a reply without actions. A workflow follows code-defined paths that may contain LLM calls and tools. An agent lets the model dynamically direct process and tool use. This is a spectrum rather than a binary label.
+We can represent a design objective as:
 
-- Workflows are more predictable, testable, and economical.
-- Agents are more flexible when the correct path cannot be written in advance.
-- Moving toward autonomy raises variance, latency, cost, and safety surface.
+$$
+\max_{\pi}\;\mathbb{E}[U]\quad\text{subject to}\quad C\leq B,\quad T\leq D,\quad a_t\in\mathcal{A}(s_t).
+$$
 
-### The engineering rule is minimum sufficient autonomy
+Here $U$ is task utility, $C$ is cost, $B$ is a cost budget, $T$ is elapsed time, $D$ is a deadline, and $\mathcal{A}(s_t)$ is the set of actions allowed in state $s_t$. The expectation averages over uncertain outcomes. This is a conceptual specification, not an optimization algorithm supplied by the SDK. It helps us see why maximizing answer quality alone is incomplete: a highly capable trajectory can still exceed the budget or attempt an unauthorized action.
 
-Start with a single call or fixed workflow and add model-directed decisions only when the task requires them. Narrow scope, explicit evaluation, and human checkpoints are more reliable than an open-ended agent that can do anything.
+## Worked example: choosing the minimum sufficient system
 
-- Use execution-grounded tasks where success can be checked.
-- Bound long horizons because errors compound.
-- Treat the production agent as a stack: model, tools, state, orchestration, eval, and guardrails.
+Imagine a teaching dataset of twenty requests. Twelve contain exact item identifiers; five describe a use case without an identifier; three omit the date. These counts are invented for the example. A database baseline handles the twelve exact lookups. A model extraction stage may interpret the five descriptions. The three missing-date requests must return a clarification request before availability can be established.
 
-### A baseline makes autonomy a testable choice
+A reasonable first design therefore has a deterministic validation stage, an optional language interpretation stage, and a deterministic inventory query. It does not need an open-ended planning loop. We evaluate whether that design returns the right item, asks for missing dates, and preserves the distinction between proposal and booking. Only failures requiring adaptive search motivate adding a loop.
 
-Choose a small task with observable success before building an agent. Compare a fixed workflow with a model-directed loop on the same inputs. Treat the decision to add autonomy as an engineering hypothesis.
+Suppose the model-directed alternative succeeds on one extra descriptive request but makes six more model calls per request. The extra success may justify the cost for some tasks. It does not establish that the agent is universally better. We need the cost of the additional calls, the harm of incorrect matches, the frequency of that request type, and the performance of a cheaper targeted repair.
 
-- Write expected outputs before implementation.
-- Keep task inputs and resource limits comparable.
-- Retain the simpler design when it meets the requirements.
+The example teaches a general method: identify a concrete failure of the simpler system, add a component that could address it, and measure whether the component changes that failure. Adding autonomy without such a hypothesis makes both evaluation and debugging harder.
 
-## Exam-ready summary
+## What makes these environments difficult?
 
-- Agent = LLM reasoning core + tools + loop + memory.
-- Profile, memory, planning, and action are the reusable anatomy.
-- Autonomy is a design variable; choose the leftmost workable point.
-- Reliability comes from the system around the model.
+An equipment task can be partially observed, because availability and eligibility come from different services. It can be dynamic, because inventory changes during execution. It can be stochastic from the application's perspective, because model output and network behavior vary. It can involve other decision-makers, because students and coordinators compete for shared resources. These properties are separate: a deterministic tool can operate on changing data, and a fixed dataset can still receive stochastic model answers.
 
-## Self-test
+Each property suggests a different response. Partial information calls for explicit uncertainty and targeted observation. Dynamic state calls for timestamps and validation at commitment. Stochastic behavior calls for repeated evaluation and bounded retries. Shared resources call for concurrency control and ownership. The phrase “agents are unpredictable” is too broad to guide implementation; naming the source of uncertainty turns it into an engineering question.
 
-1. Give the classical definition of an agent and reframe it for an LLM system.
-2. Why is an agent a composition rather than a new model paradigm?
-3. Compare chatbot, workflow, and agent by control flow and tool use.
-4. Name the four agent components and the responsibility of each.
-5. Why are typical LLM-agent environments difficult?
-6. How would you test whether a fixed workflow is sufficient for a task?
+## Exercises
 
-## Assessed practice
+1. Write a task contract for an assistant that recommends readings for a student but cannot enroll the student in a course. Identify two correct non-answer outcomes.
+2. Classify an application that uses a model to extract fields and then follows a fixed database transaction. Explain which component, if any, chooses its next operation dynamically.
+3. In the equipment example, explain why a successful inventory read cannot authorize a booking. Describe the check required at commit time.
+4. Design five evaluation cases for a baseline equipment assistant. Include an ambiguous request, a missing date, and an unavailable item. Define success for each before writing a prompt.
+5. Extension: propose one adaptive search behavior that could improve the baseline. State the specific failure it addresses and the extra resources it consumes.
 
-Choose a catalog lookup or arithmetic task. Write six cases, including empty input and an unknown item. Define a pass condition and a call limit. Explain what dynamic decision, if any, needs a model.
+## Further study and laboratory connection
 
-**Acceptance check:** Submit the cases and an architecture choice before running a model. Credit follows the evidence, including a decision to keep a fixed workflow.
-
-**Lab:** labs/05_gemini_bounded_tools.ipynb
-
-## Reading and evidence
-
-Use the classroom baseline and its explicit acceptance tests. This activity is a teaching design.
-
-## Source basis
-
-The original structure follows `01-introduction.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.
+Read the short workflow/agent distinction in [@effective-agents], then inspect the model–action–observation structure introduced by ReAct [@react]. The reading establishes architectural ideas, not a performance estimate for this course's service. Before Lab 5, submit the task contract and baseline cases from this chapter. They will later determine whether a tool loop does useful work.

@@ -1,0 +1,51 @@
+# An end-to-end design case
+
+## Requirements and evidence
+
+We now assemble the recurring service into one design. The user asks for two cameras for a field project on a specified date and asks the system to prepare a reservation. The application has authenticated the user. Catalog records identify equipment, policy records state conditions, and inventory reports availability. The user has not authorized commitment.
+
+The task contract requires either a supported proposal or a precise unresolved outcome. A supported proposal contains item IDs, quantities, date, relevant policy sources, and a statement that no booking has been committed. An unresolved outcome identifies missing information, unavailable stock, conflicting policy, or an infrastructure failure. The system may read authorized records but cannot commit effects during this phase.
+
+The baseline accepts exact item IDs and performs deterministic validation and lookup. The model-assisted design adds language interpretation and bounded alternative search. The experiment asks whether the added language and search components help requests expressed as use cases. It does not compare the systems only on cases selected after observing which one wins.
+
+## State design
+
+Use explicit state fields: original request, authenticated subject reference, interpreted constraints, unresolved fields, retrieved evidence, candidate items, inventory observations, proposal version, resource counters, and terminal status. Keep authoritative approval and committed effects in the service layer, with references in graph state where necessary.
+
+The graph moves through interpretation, input validation, evidence retrieval, candidate selection, inventory lookup, proposal validation, and response construction. An unresolved date goes to clarification. Empty evidence may permit one targeted query repair. A denied action goes to a denied terminal state. A timeout follows the bounded infrastructure policy. None of these paths is represented by silently returning an empty string.
+
+The state design supports diagnosis. If the wrong date is in interpreted constraints, investigate interpretation. If the date is right but the evidence is stale, investigate corpus maintenance or retrieval. If a valid proposal becomes a duplicate booking, investigate effect handling. A final answer alone cannot localize these failures.
+
+## Tool contracts and trust
+
+The catalog tool is read-only and accepts a bounded query. The inventory tool accepts item IDs and a validated date interval. The proposal builder combines validated records without committing. A separate commit operation requires a matching approval record and operation ID.
+
+A model-generated user identifier is never the authority for access. The application derives the subject from authentication and passes only the permitted scope to tools. Retrieved text can influence which evidence the model discusses, but cannot change the tool registry or the authorization policy.
+
+Every evidence record retains source ID, text, and version or effective date when available. If two policies conflict and no authority rule resolves them, the graph returns an unresolved-policy outcome. It does not ask additional agents to vote until a preferred policy emerges.
+
+## A successful trace
+
+The interpretation stage resolves the requested date and recognizes a field-use requirement. Retrieval returns the applicable loan policy and catalog descriptions. Candidate selection proposes C17 and C18. Inventory reports that C17 is unavailable and C18 is available. One bounded alternative search finds C19, whose policy and availability checks pass.
+
+The proposal contains C18 and C19, the requested date, quantities of one each, and the supporting policy IDs. The response explains that availability was observed and that commitment requires review. The trace contains the failed candidate as well as the final candidates, allowing evaluation to account for the extra search.
+
+After the user reviews the exact proposal through the trusted interface, a separate approval event may authorize commitment. The commit service rechecks relevant current conditions and applies the operation idempotently. The answer after commitment must refer to the actual service result, not merely to the earlier proposal.
+
+## Four failure traces
+
+In the missing-date trace, interpretation returns an unresolved field and the system asks for the date. No inventory request occurs. This is an acceptable clarification outcome, not a failed attempt to guess.
+
+In the malicious-evidence trace, a retrieved passage instructs the assistant to export the profile. The model may or may not propose that operation. The runtime rejects it because it is outside the task scope and tool contract. Record model redirection separately from effect prevention.
+
+In the timeout trace, inventory does not return before the deadline. The system records the attempted request and applies its read retry policy if budget remains. If the retry also fails, the answer states that availability could not be established. It does not claim that the equipment is unavailable.
+
+In the uncertain-commit trace, the booking service may have committed before the response was lost. The system queries or reconciles using the operation ID. It does not create a fresh logical booking merely because the client lacks a response. If reconciliation remains impossible, it escalates the uncertainty with the original operation ID preserved.
+
+## Evaluation and submission
+
+The test set includes exact requests, descriptive requests, missing fields, unavailable items, contradictory evidence, malicious evidence, and infrastructure failures. Separate model-quality experiments from deterministic policy and recovery tests. Repeat live attempts only under a predeclared budget and retain failures.
+
+A useful report includes a baseline comparison, raw counts, representative traces, and the limits of the test set. If the model-assisted design helps descriptive requests but costs more and adds no value to exact lookups, route only the descriptive cases through it. The conclusion should guide the architecture rather than defend the most elaborate implementation.
+
+The capstone submission contains the runnable offline path, dependency snapshot, cases and expected results, evaluation manifest, results, negative tests, recovery evidence, and an operating note. The reviewer should be able to distinguish a local fixture guarantee, a live observation, and an untested assumption without reconstructing the student's intentions.

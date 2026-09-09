@@ -1,5 +1,8 @@
 # Implementation status — 9 September 2026
 
+**Edition note:** This record describes the earlier integrated conspect and lab release. The subsequent full textbook is delivered as Markdown/LaTeX; see [textbook validation](../textbook/VALIDATION.md). The existing 52-page PDF is the earlier conspect, not a compiled version of the new textbook.
+
+
 The course materials and local implementation are ready for instructor review. Live model evaluation and classroom assessment remain pending.
 
 | Plan stage | Status | Evidence and remaining gate |

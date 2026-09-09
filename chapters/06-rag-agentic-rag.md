@@ -1,103 +1,79 @@
-# 06. RAG and Agentic RAG
+# Retrieval and evidence-grounded answers
 
-> RAG grounds generation in controlled evidence; agentic RAG adds decisions about whether, what, and how to retrieve.
+## Why retrieval belongs in the architecture
 
-## Learning objectives
+The equipment service maintains policies that can change independently of the language model. It also needs to explain which policy supports a recommendation. Retrieval supplies external records at inference time so the system can use current, attributable information. The original RAG work combines parametric language generation with nonparametric retrieval and evaluates particular trained models on knowledge-intensive tasks [@rag]. Modern applications use the term more broadly for systems that retrieve evidence before generating an answer.
 
-- Explain the classic RAG pipeline
-- Tune chunking and retrieval
-- Evaluate retrieval and generation separately
-- Compare vector, agentic, and graph retrieval
+Retrieval does not make an answer correct by construction. The corpus may be stale, the search may miss the relevant passage, the retrieved passage may be inapplicable, or the model may misread it. A useful RAG design preserves enough intermediate information to determine which of these failures occurred.
 
-## Core notes
+## Building the evidence collection
 
-### Retrieval addresses the limits of parametric memory
+An ingestion pipeline acquires documents, extracts text, divides it into retrievable units, attaches metadata, and builds an index. Each step can change what the system is able to find. A PDF extractor may lose table structure. A chunk boundary may separate an exception from the rule it modifies. A document with no effective date may be hard to compare with a newer policy.
 
-Knowledge stored in weights can be outdated, unavailable for private corpora, unreliable on rare facts, and difficult to verify. RAG fetches evidence at query time and includes it in context so generation can be grounded and cited.
+For the equipment case, every chunk should retain a stable identifier, source document, location within that document, and relevant version or date. A source ID identifies a record; it does not establish that the record is trustworthy. The application may also need ownership, access restrictions, and supersession information.
 
-- Domain accuracy comes from a controlled corpus.
-- Freshness comes from updating the index.
-- Traceability comes from source metadata and citations.
-- Privacy requires access control before retrieval reaches the model.
+Chunk size is a tradeoff. A small chunk can isolate a precise statement but omit necessary context. A large chunk can preserve context but include unrelated rules and consume more input space. Overlap can preserve sentences across boundaries, but repeated text can occupy retrieval slots and inflate the apparent amount of independent evidence. Evaluate chunking with actual questions, including questions about exceptions and tables.
 
-### Classic RAG is an ingestion and query pipeline
+## Lexical and vector retrieval
 
-Documents are loaded and normalized, split into chunks, embedded, and stored. At query time the question is embedded, relevant chunks are retrieved, the prompt is augmented, and the LLM generates an answer from that evidence.
+Lexical retrieval matches words or terms. It is often valuable for exact identifiers such as C17 and policy codes. Vector retrieval maps queries and passages into numeric representations and ranks their similarity. A common similarity measure for nonzero vectors is cosine similarity:
 
-- Loaders preserve metadata such as source, date, and permissions.
-- Vector indexes support semantic nearest-neighbor search.
-- The generated answer should cite the retrieved source.
+$$
+\operatorname{cos}(q,d)=\frac{q\cdot d}{\lVert q\rVert\lVert d\rVert}.
+$$
 
-### Chunking sets the ceiling for retrieval
+The dot product measures alignment, while the denominator removes scale. A high similarity score means the vectors are close according to the representation; it is not the probability that the passage answers the question. Zero vectors require a defined implementation policy because the denominator would be zero.
 
-Chunks must fit budgets without cutting away the relationships needed to answer. Fixed-size windows are a practical default; hierarchical or sentence strategies fit structured or precise material. Overlap reduces boundary loss at additional index cost.
+A hybrid system combines lexical and vector evidence. One rank-based combination is to sum reciprocal rank terms from different retrievers, using a positive constant to moderate the influence of the top rank. The precise fusion choice is a design decision to evaluate. It is especially useful to retain an exact-identifier path rather than assume semantic similarity will preserve every alphanumeric distinction.
 
-- Too-small chunks lose context.
-- Too-large chunks dilute relevance.
-- Answers spanning boundaries may require overlap or parent-child retrieval.
-- Metadata captured during loading enables filters.
+A reranker examines a smaller candidate set with a more expensive scoring process. It can improve ordering but cannot recover a document absent from the candidate set. This dependency is important when diagnosing poor results: changing the reranker will not repair an ingestion failure.
 
-### Naive top-k retrieval is only a baseline
+## Worked example: retrieval quality
 
-Semantic similarity can miss exact terms and return redundant or weak evidence. Hybrid search combines vector and lexical retrieval; reranking improves precision; query transformation, expansion, multi-query, and HyDE improve recall.
+Assume five policy passages are relevant to a teaching question. A retriever returns three passages, two of which are relevant. Precision at three is $2/3$; recall at three is $2/5$. Precision asks how much of the returned set is relevant. Recall asks how much of the relevant set was found. The same system can have high precision and low recall.
 
-- Top-k trades missed evidence against context dilution.
-- Filter permissions before semantic ranking.
-- Rerank a candidate set rather than the whole corpus.
+If the first relevant passage appears at rank three, reciprocal rank is $1/3$. Averaging reciprocal ranks across questions gives mean reciprocal rank. This measure emphasizes the first relevant result. It does not reward finding all clauses required for a multi-part policy answer.
 
-### Evaluate the retriever and generator separately
+Now suppose the answer needs both a general eligibility rule and its fieldwork exception. Retrieving only the general rule may produce an answer that is locally supported but incomplete. For this task, evaluate whether the evidence set covers all required claims, not merely whether one relevant passage appears early. Define relevance and required coverage before interpreting a score.
 
-Retrieval metrics such as recall, precision, and MRR ask whether relevant evidence was fetched. Generation metrics ask whether the answer is relevant and faithful to that evidence. Diagnosing the two stages separately prevents prompt changes from hiding retrieval failures.
+## From passages to supported claims
 
-- Faithfulness directly measures unsupported claims.
-- Citations make human verification possible.
-- Production evaluation should include freshness and permission behavior.
+A generated answer should make claims that can be checked against the retrieved evidence. Suppose the model says, “Students may borrow C17 for five days [P4].” First check that P4 belongs to the supplied evidence set. Then inspect whether P4 actually states the five-day rule, whether it applies to students, and whether the policy is effective for the requested date.
 
-### Agentic and graph retrieval solve different hard cases
+Citation membership is a useful automated test, but it only establishes that an identifier is present. It does not establish entailment, scope, authority, or freshness. A stronger evaluation decomposes the answer into claims and asks what evidence supports each one. The level of checking should match the consequences of an incorrect claim.
 
-Agentic RAG lets the model decide whether to retrieve, rewrite or decompose queries, grade evidence, and retrieve again. GraphRAG extracts entities and relationships and retrieves connected subgraphs, which helps multi-hop questions and hidden connections.
+Abstention should also have a clear meaning. “No supporting passage found” describes the retrieval outcome. “The policy does not exist” is a stronger claim about the corpus or institution and may not be justified. The user-facing answer should state the missing evidence and, where appropriate, identify the next action that could resolve it.
 
-- Self-RAG decides and critiques retrieval.
-- Corrective RAG grades evidence and uses a fallback when weak.
-- Vector RAG finds semantically relevant text.
-- GraphRAG follows relationships at higher build cost.
+## Corrective retrieval as a state machine
 
-### Provenance and abstention make retrieval auditable
+A fixed RAG workflow retrieves once and answers. A corrective workflow evaluates whether the evidence is adequate, changes the query when justified, and retrieves again under a bound. Our teaching graph uses fields such as `query`, `evidence`, `repair_count`, and `status`. If the first evidence set is empty, it can attempt one repair. If the second attempt is still inadequate, it abstains.
 
-Carry source IDs and text through every retrieval step. Check whether the evidence supports the answer separately from whether a citation ID exists. A bounded repair attempt should end in an answer or an explicit abstention.
+A repair should target an identifiable retrieval problem. If the query uses an informal term such as “sound recorder,” a catalog synonym such as “audio recorder” may help. If the date is missing, rewriting the search query cannot resolve the user ambiguity. If the policy document was never indexed, repeatedly reformulating the query is also unlikely to help. Different missing-information causes require different transitions.
 
-- Compare against static retrieval on the same questions.
-- Keep conflicting evidence visible.
-- Treat a rewrite as optional and measurable.
+The graph should retain the original query, repaired query, evidence IDs, and stop reason. Without this trace, an apparent improvement could simply come from searching a broader corpus or consuming more calls. Compare against the one-pass baseline using the same task set and report the extra retrieval and generation work.
 
-## Exam-ready summary
+## Conflicts and authority
 
-- RAG provides fresh, private, and citable evidence.
-- Chunking and retrieval quality determine the maximum answer quality.
-- Measure retrieval and generation as separate systems.
-- Agentic RAG controls retrieval; GraphRAG retrieves relationships.
+Suppose two passages disagree: an old handbook says a three-day limit; a newer approved policy says five days. A generic majority vote over chunks may favor the old rule if the handbook appears in several duplicate locations. The application needs a version and authority policy rather than a count of matching sentences.
 
-## Self-test
+If the metadata does not establish which source governs, the answer should present the conflict and avoid committing to an unsupported interpretation. A model's confidence does not create document authority. In the equipment case, unresolved policy conflict should block a reservation proposal that depends on eligibility and may require a coordinator's decision.
 
-1. Describe the RAG pipeline from ingestion to answer.
-2. How do chunk size and overlap affect retrieval?
-3. Why can top-k retrieval dilute an answer?
-4. Compare hybrid search, reranking, and query transformation.
-5. What is faithfulness and why is it important?
-6. What can a citation-membership test establish, and what remains untested?
+Retrieved content can also contain instructions aimed at the agent. Treat these as source text, not commands. Chapter 12 develops this threat model; for now, preserve the distinction between “the document contains this sentence” and “the application is authorized to obey it.”
 
-## Assessed practice
+## Graph-based retrieval and when it helps
 
-Complete Lab 6 and add unknown, conflicting, and irrelevant records. Compare zero repair with one repair using a fixed question set.
+Some questions ask about relationships across a corpus rather than one passage. A graph representation can connect entities, events, and claims. The GraphRAG work by Edge and colleagues studies graph-based query-focused summarization using extracted structure and community summaries [@graphrag]. This is a particular method; any application with a graph database is not automatically a reproduction of it.
 
-**Acceptance check:** Report retrieval hits, unsupported answers, abstentions, and attempts separately. A known citation ID alone does not count as grounded correctness.
+For our service, a relationship graph might connect projects, required equipment, training certificates, and departments. It introduces new questions about extraction correctness, missing edges, update cost, and provenance of inferred relationships. Build a passage-retrieval baseline first. Use graph structure when the task requires relationships that the simpler representation fails to recover, and test those relationships directly.
 
-**Lab:** labs/06_langgraph_corrective_rag.ipynb
+## Exercises
 
-## Reading and evidence
+1. A retriever returns five passages, three relevant, from a corpus with six relevant passages for the query. Compute precision and recall at five.
+2. Describe a chunking failure that separates a rule from an exception. Propose a test that would reveal it.
+3. Construct an answer with a valid citation ID but an unsupported claim. Explain which automated check would miss the error.
+4. Implement one bounded query repair and an abstention path in Lab 6. Preserve both queries and evidence IDs in the trace.
+5. Two conflicting documents have no effective dates. Write an appropriate answer and specify the evidence needed before committing a policy-dependent action.
 
-- **S4** [Gemini structured outputs](https://ai.google.dev/gemini-api/docs/structured-output). Google documentation, accessed, 2026-09-09. Supported schemas constrain structure. Application validation must check meaning and policy.
+## Further study and laboratory connection
 
-## Source basis
-
-The original structure follows `06-rag-agentic-rag.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.
+Read [@rag] for the original retrieval/generation formulation and [@graphrag] for a different retrieval problem. Complete the repaired retrieval foundation before Lab 6. The lab's controlled corpus makes provenance and failure paths inspectable; its fixture results are not a claim about real-world retrieval quality.

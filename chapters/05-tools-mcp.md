@@ -1,105 +1,87 @@
-# 05. Tool Use, MCP, and Frameworks
+# Tools, contracts, and protocol boundaries
 
-> Tools are typed prompts at a security boundary; MCP standardizes their integration, while frameworks organize control and state.
+## A tool is an interface to an operation
 
-## Learning objectives
+A tool connects a model proposal to executable behavior. The behavior may be pure computation, a read from a service, or a change to an external system. Those categories have different failure and authorization requirements. A calculator can return a result without changing the environment. An inventory lookup reads changing state. A reservation call creates a lasting effect.
 
-- Design reliable tool schemas
-- Explain the model-runtime-tool cycle
-- Describe MCP primitives and transports
-- Choose raw APIs or a framework
+A good tool interface exposes the smallest operation the application needs. A function such as `reserve_item(item_id, date)` is easier to constrain than “run arbitrary database code.” Narrow interfaces make allowed behavior explicit, reduce the argument space, and give tests something concrete to exercise. They do not eliminate the need for checks inside the service.
 
-## Core notes
+Toolformer studied training a language model to select and use API calls [@toolformer]. This course instead focuses on application engineering around an already available model. Learning to propose useful calls and having permission to execute them are distinct concerns. A highly accurate model still needs a runtime with a clear authority boundary.
 
-### A tool is a typed contract, not direct model access
+## Designing a contract
 
-A tool definition names an operation, explains when to use it, and defines typed parameters. The model emits a name and arguments; the runtime validates, authorizes, executes, and returns the result to context.
+A tool contract includes a name, purpose, input schema, output schema, side-effect description, error semantics, and resource limits. The description should distinguish similar tools. `lookup_item` returns catalog information; `check_availability` returns availability for a particular interval; `prepare_reservation` produces a proposal; `commit_reservation` changes the booking system. Hiding these differences behind one broad “equipment” tool makes correct use harder to verify.
 
-- The model never directly touches the external API.
-- Schema validity must be followed by policy validation.
-- Tool results are untrusted inputs to the next model step.
+Input validation should reject missing fields, unexpected fields where appropriate, wrong types, invalid ranges, and malformed identifiers. Domain validation then checks whether the authenticated user may act on the requested object. Never let a model-supplied `user_id` override the authenticated identity without a separately authorized delegation mechanism.
 
-### Tool descriptions are prompts
+Output contracts matter equally. A lookup should distinguish “item not found” from “service unavailable.” A timeout does not prove that the item does not exist. Include source identity and observation time when later decisions depend on freshness. Bound result size so that a huge response cannot overwhelm the next model context or the local process.
 
-Models select and fill tools from their specifications, so names, descriptions, examples, parameter types, and error messages directly affect behavior. Good granularity avoids both excessive micro-calls and confusing mega-tools.
+## Worked example: a small numeric tool
 
-- Prefer minimal parameters and enums over unconstrained text.
-- Return actionable errors rather than stack traces.
-- Make retry-prone operations idempotent.
-- Gate destructive or irreversible actions.
+Suppose the service needs a tool that adds two finite measurements within a teaching range. The following complete Python example illustrates type and magnitude checks. It is deliberately narrower than a general calculator.
 
-### The runtime is the security boundary
+```python
+import math
 
-Model-generated arguments must be treated as attacker-controlled input. Runtime controls include sanitization, least-privilege credentials, read-only defaults, sandboxing, rate limits, audit logs, and confirmation.
+LIMIT = 1_000_000.0
 
-- Do not execute raw model strings with unsafe evaluators.
-- Restrict filesystem and network scopes.
-- Separate proposing an action from authorizing it.
+def bounded_add(a, b):
+    for value in (a, b):
+        if type(value) not in (int, float):
+            raise TypeError("number required")
+        if abs(value) > LIMIT:
+            raise ValueError("operand outside range")
+        if not math.isfinite(value):
+            raise ValueError("finite operand required")
+    result = a + b
+    if not math.isfinite(result) or abs(result) > LIMIT:
+        raise ValueError("result outside range")
+    return result
 
-### MCP replaces bespoke N-by-M integration
+assert bounded_add(2, 3) == 5
+assert bounded_add(-LIMIT, LIMIT) == 0
+```
 
-Without a standard, every agent must be wired separately to every tool. The Model Context Protocol provides a shared JSON-RPC interface so hosts can connect to reusable servers, changing integration growth from N multiplied by M toward N plus M.
+The exact-type test excludes Boolean values, which Python otherwise treats as a subclass of integers. The range check precedes conversion-dependent floating-point checks, so an extremely large integer is rejected without trying to convert it to a float. The result is checked as well as the operands: two permitted operands can sum to an out-of-range result.
 
-- Tools expose actions with possible side effects.
-- Resources expose read-only context.
-- Prompts expose reusable interaction templates.
+This function bounds arithmetic on values it receives. It does not protect an HTTP server against an enormous request body before parsing. Layered resource controls begin at input size, then apply to parsed structure, permitted operations, execution time, and output size. The repaired calculator foundation extends this idea to a restricted expression tree with depth and operation limits.
 
-### MCP capabilities depend on the selected version
+## Dispatch and error handling
 
-For the MCP 2025-11-25 baseline, servers expose tools, resources, and prompts. Clients can support sampling, roots, and elicitation. This edition discusses stdio and Streamable HTTP and requires implementations to enforce access controls.
+A dispatcher receives a parsed call and looks up the implementation in an explicit registry. It should not evaluate a model-supplied expression as arbitrary Python or dynamically import a function named by the model. An unknown tool name is a predictable validation result. Recording it makes the attempted behavior visible without executing it.
 
-- Sampling lets a server request host-model generation.
-- Roots advertise filesystem context. Implementations enforce access.
-- Elicitation asks the user for input during a task.
-- Transport choice changes deployment and trust assumptions.
+A tool exception needs classification. A transient read timeout might be retried within a budget. An invalid date should be repaired before retry. A permission denial should not trigger attempts to find another route to the same prohibited action. The runtime's error policy can return safe, bounded information to the model while recording more diagnostic detail in an appropriately protected log.
 
-### Frameworks package orchestration, not understanding
+For effectful calls, retries are especially important. If the reservation service committed a booking but its response was lost, repeating the call can create a second booking unless the service supports deduplication. The request needs a stable operation identifier and a binding to the original payload. Chapters 7 and 13 develop this problem in detail.
 
-Frameworks provide loops or state graphs, persistence, streaming, tool integration, observability, memory, and human-in-the-loop hooks. Raw APIs suit simple or highly controlled agents; frameworks help when state and coordination become first-class.
+## Gemini, the Agents SDK, and responsibility
 
-- LangGraph represents nodes, edges, conditional control, and shared state.
-- Crew-style systems emphasize role-based multi-agent work.
-- Understand prompts and boundaries before adding framework abstraction.
-- MCP standardizes tools; A2A standardizes agent-to-agent collaboration.
+The Gemini native API and its OpenAI-compatible endpoint are different integration paths. In the course, the native path exposes the tool round-trip for inspection; the Agents SDK path uses an OpenAI-compatible Chat Completions model adapter. Google's compatibility documentation and the SDK model documentation describe the relevant interfaces [@gemini-openai; @agents-models]. Compatibility should be tested for the exact features used; it is not an assertion that all OpenAI-hosted capabilities exist at another provider.
 
-### Tool interfaces and authority need separate checks
+The SDK can manage model requests and local tool execution, but the tool body still owns domain validation. A framework turn limit is useful but does not replace all tool, time, and spending limits. Tracing configuration also deserves attention because traces can contain user input and tool output. The course disables provider tracing in its offline exercises and keeps live inference explicitly enabled by the instructor.
 
-The labs use Gemini native calls and the OpenAI Agents SDK compatibility path. They expose local functions with explicit input limits. MCP descriptions and roots convey context, while the host and server implementations enforce access.
+## What MCP standardizes
 
-- Reject unknown names and extra arguments before execution.
-- Bound input size and arithmetic magnitude.
-- Check provider features rather than assuming parity.
+The Model Context Protocol provides a shared protocol between hosts, clients, and servers for capabilities such as tools, resources, and prompts. In a typical arrangement, the host runs the application, a client maintains a connection, and a server exposes capabilities. The course uses the dated 2025-11-25 specification as its baseline [@mcp-spec]. These role names describe protocol responsibilities rather than separate physical machines in every deployment.
 
-## Exam-ready summary
+A tool is callable behavior; a resource supplies content; a prompt supplies a reusable interaction template. Distinguishing them helps the application decide how content enters context and how operations are invoked. A common protocol reduces bespoke integration work, but it does not make every server trustworthy or every returned document authoritative.
 
-- A model requests a tool call; a runtime decides whether to execute it.
-- Tool ergonomics strongly influence model reliability.
-- MCP standardizes reusable tools, resources, and prompts.
-- Frameworks are justified by stateful orchestration needs.
+MCP roots are particularly easy to misunderstand. The versioned roots specification describes filesystem context advertised by a client; roots are not a security sandbox [@mcp-roots]. If a server process can read arbitrary files under its operating-system credentials, advertising one directory does not revoke those permissions. Actual access controls must exist in the server, operating system, or execution environment.
 
-## Self-test
+## A boundary audit
 
-1. Walk through the complete function-call cycle.
-2. What makes a tool specification model-friendly?
-3. Why must tool results be treated as untrusted?
-4. Explain the N-by-M problem and MCP's answer.
-5. List server-side and client-side MCP primitives.
-6. Why does an advertised filesystem root still need implementation-level access controls?
+Imagine a server advertises a policy-search tool. The tool returns a document containing a request to export the student's profile. The search result is data from an external source. It cannot enlarge the caller's authority. The application must keep the user's authorized task and authenticated identity outside the control of retrieved text.
 
-## Assessed practice
+Audit the interaction as a sequence: who selected the server, who authenticated it, which credentials it uses, what operation was requested, what arguments were accepted, what data returned, and which subsequent effect was permitted. A protocol can make this sequence interoperable without answering every security question in it.
 
-Complete Lab 5's dispatch policy. For the MCP 2025-11-25 baseline, explain why a roots response cannot substitute for filesystem access controls.
+## Exercises
 
-**Acceptance check:** Reject booleans in numeric fields, nonfinite values, and oversized input. Name the component that enforces each permission.
+1. Specify separate contracts for availability lookup and reservation commitment. Include errors that must not be conflated.
+2. Test `bounded_add` with Boolean values, a huge integer, infinity, NaN, two large permitted operands, and a nonnumeric string. Explain the expected outcome for each.
+3. Explain why a valid JSON object can still contain an unauthorized action. Identify where authorization obtains the trusted user identity.
+4. A server advertises one filesystem root. What evidence would demonstrate that it cannot read outside that directory? Distinguish protocol metadata from an enforcement test.
+5. Design a retry policy for a read timeout and for a commit timeout. Explain why the policies differ.
 
-**Lab:** labs/05_gemini_bounded_tools.ipynb
+## Further study and laboratory connection
 
-## Reading and evidence
-
-- **S1** [Gemini function calling](https://ai.google.dev/gemini-api/docs/function-calling). Google documentation, accessed, 2026-09-09. Check model support and preserve complete model content when returning function responses.
-- **S2** [OpenAI Agents SDK model integration](https://openai.github.io/openai-agents-python/models/). SDK documentation, accessed, 2026-09-09. The course uses local tools with a Gemini Chat Completions compatibility endpoint.
-- **S5** [MCP roots specification 2025-11-25](https://modelcontextprotocol.io/specification/2025-11-25/client/roots). Versioned protocol specification, 2025-11-25. The course uses this historical protocol baseline. Implementations enforce access controls.
-
-## Source basis
-
-The original structure follows `05-tools-mcp.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.
+Lab 5 tests argument validation and the native call cycle. Lab 7 exercises the Agents SDK through the Gemini compatibility path. Read the exact protocol references [@mcp-spec; @mcp-roots] before making claims about MCP permissions. Record the installed versions and features actually tested rather than relying on framework names as guarantees.

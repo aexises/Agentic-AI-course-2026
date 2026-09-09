@@ -1,0 +1,30 @@
+\chapter*{Preface}
+\addcontentsline{toc}{chapter}{Preface}
+A language model can write a convincing answer without doing the work that the answer describes. An agentic system must connect language to observations, decisions, and actual operations. This book teaches how to build that connection and how to determine whether it works. Its subject is the complete system: model, software, data, tools, people, and environment.
+
+The intended reader knows basic Python: functions, dictionaries, exceptions, and tests. Familiarity with HTTP and elementary probability is useful but not assumed. Mathematical notation is introduced where it is needed. The course does not require training a large model. It requires learning to reason about a system whose proposals are uncertain and whose actions may have consequences.
+
+The thirteen chapters form a progression. Chapters 1–3 establish the problem and the execution loop. Chapters 4–7 develop control flow, tool interfaces, retrieval, and memory. Chapters 8–10 extend these ideas to coordination and planning. Chapters 11–13 explain measurement, security, and operation. Evaluation appears throughout: postponing it until the end would make the earlier design choices impossible to justify.
+
+\section*{The recurring case: a university equipment service}
+\addcontentsline{toc}{section}{The recurring case: a university equipment service}
+Throughout the book, a fictional university lends equipment to students and researchers. Its catalog records item identifiers and descriptions. A policy collection states eligibility and loan conditions. An inventory service reports availability. A reservation service changes state. A human coordinator can approve exceptional requests.
+
+A typical request is: “Find two cameras suitable for a field project next Tuesday, explain the borrowing conditions, and prepare a reservation.” Answering requires interpreting the request, looking up evidence, resolving uncertainty, and distinguishing a prepared proposal from a committed booking. Later chapters add conflicting policies, stale records, malicious retrieved text, retries, and remote departments.
+
+All names, quantities, traces, and numerical examples for this service are invented teaching examples. They are not observations of a real institution or benchmark results. Small exact examples allow us to inspect a complete failure rather than hide it behind a large average.
+
+\section*{Studying and implementing}
+\addcontentsline{toc}{section}{Studying and implementing}
+Read each chapter in order, then work through its example on paper before running code. Exercises move from explanation to calculation, implementation, and experimental design. Selected answers appear at the end of the book. They show a defensible method rather than require a particular wording. Open-ended design exercises admit more than one valid solution when the assumptions and evidence are explicit.
+
+The accompanying notebooks supply the implementation sequence: repaired foundations in Labs 3–4, then bounded Gemini tool calling in Lab 5, LangGraph corrective retrieval in Lab 6, OpenAI Agents SDK evaluation in Lab 7, and checkpointed approval in Lab 8. The book explains their principles without requiring an API account. The notebooks retain exact package versions and executable checks. The capstone asks students to combine the components and defend their design against a simpler baseline.
+
+\section*{How evidence is used}
+\addcontentsline{toc}{section}{How evidence is used}
+Citations attach to named methods, research findings, and documented software behavior. A paper establishes what its authors studied under particular conditions; it does not automatically establish what a different model or application will do. A documentation page describes an interface; it does not prove that an implementation is secure. An equation derived from stated assumptions is a mathematical result within those assumptions, not an empirical measurement.
+
+Foundational papers are included alongside recent OpenAI and Anthropic work. Publication years for arXiv items refer to their initial preprints unless otherwise specified. Recent field reports and research posts are labeled as such. Mutable interface documentation was checked on 9 September 2026. Provider models, quotas, and prices are deliberately not treated as timeless facts. Research summaries are selective and concise; the instructional explanations, examples, derivations, and exercises are developed for this course.
+
+This source edition replaces the earlier slide-derived conspect. The original thirteen-topic sequence is retained, but the textbook is authored independently of the slide generator so that a presentation rebuild cannot shorten its chapters. The supplied Markdown and LaTeX contain the same instructional content. Compilation and final page-layout review are left to the reader, as requested.
+

@@ -1,104 +1,81 @@
-# 10. Advanced Reasoning and Planning
+# Reasoning, search, and planning
 
-> Reasoning strategies trade inference compute for exploration, correction, or structure; the correct strategy depends on task difficulty and verifiability.
+## Planning as choosing actions under dependencies
 
-## Learning objectives
+The equipment request becomes more difficult when a useful result requires several dependent choices. A camera must be compatible with a power supply, available for the trip dates, and allowed under the student's training status. Planning organizes possible actions so the system can reach a valid end state without unnecessary work.
 
-- Compare linear, sampled, searched, and reflective reasoning
-- Choose a planning strategy
-- Explain test-time compute scaling
-- Recognize overthinking and faithfulness limits
+A plan is a proposed structure for future action. It is not evidence that the actions occurred. A useful plan contains preconditions, expected results, and dependencies. “Check eligibility, then prepare a reservation” is stronger than “handle the booking” because the second step depends on the first. The runtime still has to verify eligibility when the plan executes.
 
-## Core notes
+Reactive control chooses a next step from the latest observation. Plan-and-execute constructs a broader sequence before beginning, then revises it when observations invalidate assumptions. Neither dominates every task. A short lookup may not justify a planning phase; a multi-resource expedition may benefit from making dependencies explicit.
 
-### A single chain is useful but commits early
+## Reasoning paths and self-consistency
 
-Chain-of-thought provides one linear path. It can make intermediate work inspectable, but a greedy chain has no exploration or recovery and its verbalized explanation is not guaranteed to be a faithful record of internal computation.
+A model can generate different intermediate paths to an answer. Self-consistency samples multiple reasoning paths and aggregates their answers; Wang and colleagues report improvements on selected reasoning benchmarks [@self-consistency]. The aggregation rule requires comparable final answers. Voting over free-form essays without a normalization rule can confuse wording differences with substantive disagreement.
 
-- Compare a direct baseline with explicit reasoning on the task.
-- Verify outputs externally where possible.
-- Do not treat stated reasoning as ground truth.
+Why might voting help? Under a deliberately restrictive model, suppose three independent attempts each produce the correct binary answer with probability $p$. Majority correctness occurs when exactly two or all three are correct:
 
-### Self-consistency widens exploration by sampling
+$$
+P(\text{majority correct})=3p^2(1-p)+p^3.
+$$
 
-Self-consistency samples multiple reasoning paths and aggregates their answers. Separately sampled outputs may share systematic errors. Measure whether voting improves the target task under a declared budget.
+At $p=0.7$, this equals 0.784. The improvement follows from the assumed independence and binary outcome structure. Real model outputs can share errors because they use the same model, prompt, and evidence. If every attempt follows the same wrong policy passage, repeated sampling does not create independent evidence.
 
-- Cost grows roughly with the number of samples.
-- Voting requires an answer that can be aggregated.
-- Measure shared errors rather than assuming independence.
+The correct experimental question is therefore whether voting improves this task under a declared resource budget. Record individual outputs, normalize answers using a documented rule, and include ties or invalid answers in the procedure. Report how much additional inference the voting design consumes.
 
-### Tree- and Graph-of-Thoughts add explicit search
+## Search over partial solutions
 
-Tree-of-Thoughts generates candidate partial states, evaluates them, and expands promising branches using a search strategy, enabling lookahead and backtracking. Graph-of-Thoughts also merges and refines ideas rather than keeping a strict tree.
+Tree of Thoughts explores candidate intermediate states using generation and evaluation within a search process [@tree-thoughts]. A general search algorithm needs a state representation, successor function, goal test, and selection rule. For equipment planning, a state could be a partial kit with unresolved requirements. A successor adds a compatible item. The goal test checks that every requirement is satisfied and all constraints hold.
 
-- Search needs a useful evaluator.
-- Branching can grow exponentially.
-- Graphs support aggregation and refinement loops.
-- Use search when alternatives and dead ends matter.
+Breadth-first search explores states in order of depth. Depth-first search follows one branch further before backtracking. Beam search retains a limited number of candidates at each stage according to a score. These strategies differ in memory use and which alternatives they discard. A model-based evaluator can rank candidates, but an incorrect score may prune the only valid solution.
 
-### Reflection improves one path over time
+If a full tree has branching factor $b>1$ and depth $d$, its number of nodes is:
 
-Reflexion converts evaluation into a verbal lesson stored for another attempt. Self-Refine repeats critique and revision. Reflection deepens one trajectory, whereas search widens across trajectories.
+$$
+1+b+b^2+\cdots+b^d=\frac{b^{d+1}-1}{b-1}.
+$$
 
-- A test or grounded critic makes reflection reliable.
-- Vague self-critique can reinforce errors.
-- Revision loops need quality and cost stops.
+For $b=3$ and $d=4$, there are 121 nodes. This counts a complete tree under fixed branching, not an actual model workload. Pruning and early stopping can reduce the explored set, while retries and evaluation calls add work not visible in the node count.
 
-### Planning changes when and how decisions are made
+## Worked example: a constrained kit search
 
-ReAct decides step by step and suits short uncertain tasks. Plan-and-execute decomposes first and can reduce repeated planning on long tasks. Re-planning repairs a plan after new evidence. DAG planning runs independent steps in parallel.
+Suppose a kit needs one camera and one battery, with a total weight limit of 3 units. Camera A weighs 2 units and uses battery X, which weighs 2. Camera B weighs 1 unit and uses battery Y, which weighs 1. The first partial state chooses A because it has the highest quality score. Extending it with X creates a 4-unit kit, which violates the hard limit.
 
-- Reactive plans adapt but can be myopic.
-- Up-front plans add global structure but can become stale.
-- Parallel plans lower latency only when dependencies permit.
-- Every planner needs execution feedback.
+A greedy strategy that refuses to revise the camera choice gets stuck. A search strategy can backtrack and select B plus Y, producing a valid 2-unit kit. The quality score is useful only among feasible plans. A hard constraint should not be overridden because an attractive partial state received a high model score.
 
-### Reasoning models internalize deliberate inference
+The example also shows why evaluating partial states is difficult. A looks better before compatibility and weight are considered together. A good evaluator should account for whether a partial state can still be completed, not only how appealing its current contents look. In a real application, exact compatibility and weight checks can often be deterministic, leaving the model to interpret preferences or propose candidates.
 
-RL-trained reasoning models generate extended internal deliberation and spend test-time compute according to task difficulty. Strong models can serve as planners or orchestrators while cheaper models handle routine extraction, routing, and tool calls.
+## Reflection and refinement
 
-- More thinking raises latency and cost.
-- Easy problems can suffer from overthinking.
-- Beyond a point, additional compute may reduce accuracy.
-- Escalate selectively instead of using maximum reasoning everywhere.
+Reflection uses feedback from an attempt to guide a later attempt. Reflexion studies agents that retain verbal feedback, while Self-Refine studies iterative generation, feedback, and refinement [@reflexion; @self-refine]. These methods differ from searching a broad tree: they revise a trajectory or candidate through feedback rather than necessarily keeping many alternatives alive.
 
-### Reasoning strategies require controlled comparisons
+Feedback quality determines what the loop can learn. “The kit is poor” is vague. “The selected battery is incompatible with camera A under catalog record C12” identifies a correctable constraint. A deterministic test failure can anchor revision. A self-generated critique without new evidence may merely change style or introduce an unsupported alternative.
 
-Compare a direct baseline with sampling or review under a declared resource budget. Separate samples can share systematic errors. Counterfactual prompt edits test a behavioral claim without establishing a complete account of internal computation.
+Store the reason for a revision, the changed fields, and the test result after revision. If the model changes unrelated parts of the plan, rerun the relevant tests. Avoid declaring progress based on a more confident explanation. The acceptance condition is a property of the plan or outcome.
 
-- Choose a scorer before inspecting answers.
-- Keep held-out cases out of prompt development.
-- Report when extra reasoning fails to help.
+## Test-time compute and reasoning models
 
-## Exam-ready summary
+Training changes model parameters; test-time computation spends resources on a particular request. Sampling multiple candidates, evaluating branches, or revising an answer are application-level ways to spend test-time compute. Some model families also perform extended internal reasoning. These are different mechanisms, even when both increase request cost or latency.
 
-- Self-consistency samples; search branches; reflection revises.
-- ReAct, plan-and-execute, re-planning, and DAG execution solve different control problems.
-- Reasoning compute should be allocated by difficulty.
-- Verbal reasoning is a scaffold, not proof of correctness.
+The application designer needs an allocation policy: which tasks justify extra work, how the extra work is bounded, and how benefit is measured. A routing rule might use a direct method for exact lookup and a bounded search for a multi-constraint plan. But a difficulty estimate can be wrong, so the fallback and stop behavior must also be evaluated.
 
-## Self-test
+A model's verbal explanation of its reasoning should not be treated as an execution trace of internal computation. Counterfactual experiments can test whether a specified input edit changes output behavior [@chive]. They do not reveal every internal cause. In the course, require concise justifications tied to evidence and tests rather than reward the length of generated reasoning.
 
-1. Compare chain-of-thought and self-consistency.
-2. What are generate, evaluate, and search in Tree-of-Thoughts?
-3. How does Graph-of-Thoughts extend a tree?
-4. Compare reflection with search.
-5. When should an agent use ReAct, plan-and-execute, or parallel planning?
-6. What evidence would justify spending more inference on a reasoning strategy?
+## Planning with observations
 
-## Assessed practice
+An initial plan may assume that C18 is available. After an inventory read contradicts that assumption, the plan must change. Replanning should preserve completed valid work and invalidate dependent steps. If only the camera choice changes, a policy check about the user's training may remain valid, while compatibility checks for the old camera must be repeated.
 
-Use Lab 7's paired inputs to test a prediction about a misleading cue. Propose an equal-budget comparison with voting and identify a shared-error failure case.
+Represent dependencies explicitly so that invalidation is systematic. A directed acyclic graph is useful for a fixed plan with no cycles. A reactive workflow may include loops for repair, but those loops need counters and stopping conditions. Graph structure makes dependencies inspectable; it does not ensure that the node descriptions are correct.
 
-**Acceptance check:** Keep predictions, observations, and interpretations separate. State the limits of a small experiment.
+A plan should also distinguish reversible preparation from effects. Searching, calculating, and drafting can usually precede approval. Commitment requires current validation and authorized execution. An elegant plan is still incomplete until the system can explain which effects occurred and which remain proposals.
 
-**Lab:** labs/07_agents_sdk_evaluation.ipynb
+## Exercises
 
-## Reading and evidence
+1. Compute three-vote majority correctness at $p=0.6$ under the chapter's independent binary model. Explain why this is not a prediction for three real model calls.
+2. Count the nodes in a full tree with branching factor 2 and depth 5. State what extra model work the count omits.
+3. Extend the kit example with a third camera and battery. Construct a case where greedy quality ranking fails but backtracking finds a feasible kit.
+4. Write a reflection message grounded in a failed compatibility test. Specify which fields may change and which tests must rerun.
+5. Compare direct answering, three-sample voting, and one revision on a fixed task set. Predeclare the budget and how ties, invalid responses, and timeouts are scored.
 
-- **P3** [Would this change your answer?](https://arxiv.org/abs/2608.16747). Anthropic/Fellows preprint, arXiv v1, 2026-08-17. CHIVE tests counterfactual prompt changes. Generated explanations remain hypotheses. Official post: August 21.
-- **R1** [Patterns and problems in emerging multiagent systems](https://www.anthropic.com/research/multiagent-systems). Anthropic research post, 2026-08-13. Controlled coordination experiments. Compare scope and budgets before interpreting the findings.
+## Further study and laboratory connection
 
-## Source basis
-
-The original structure follows `10-reasoning-planning.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.
+Read [@self-consistency; @tree-thoughts; @reflexion] as distinct ways to organize additional computation. Lab 7 provides the experimental structure for paired comparisons. An acceptable conclusion is that more computation failed to improve the outcome, provided the comparison and accounting are explicit.

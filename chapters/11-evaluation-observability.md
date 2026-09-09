@@ -1,104 +1,81 @@
-# 11. Evaluation and Observability
+# Evaluation, experiments, and observability
 
-> Agent quality requires systematic measurement of both final outcomes and the trajectories that produced them, supported by complete traces.
+## Begin with the claim you want to test
 
-## Learning objectives
+An evaluation connects a claim to observations. “The agent is good” does not specify a measurable claim. “On these equipment requests, the revised retrieval workflow returns more fully supported answers than one-pass retrieval under the declared request budget” does. It identifies a population of tasks, a comparison, an outcome, and a resource condition.
 
-- Design outcome and trajectory metrics
-- Read benchmarks critically
-- Use LLM judges with safeguards
-- Build offline, online, and CI evaluation
+The unit of analysis matters. A task is a problem instance. An attempt is one execution on that task. A completed answer is an output that reached a terminal answer state. A correct answer satisfies the scoring rule. One task may have several attempts, and an attempt may fail before producing an answer. Treating these quantities as interchangeable changes the denominator and can hide failures.
 
-## Core notes
+Before running an experiment, write the scoring rule and the failure taxonomy. In the equipment service, an exact catalog lookup can use an objective expected identifier. A policy explanation needs claim-level support review. A reservation task needs inspection of the final domain state, not merely the agent's statement that it succeeded.
 
-### Agent evaluation is difficult for structural reasons
+## Outcomes and trajectories
 
-Runs are non-deterministic, outputs are open-ended, tasks are multi-step, and correctness, cost, latency, and safety can conflict. Models, tools, and prompts also change, so anecdotal testing cannot distinguish progress from regression.
+Outcome evaluation asks whether the final result satisfies the task. Trajectory evaluation asks how the result was produced: which tools were called, whether prohibited actions were attempted, which evidence was used, and how much work occurred. Both are needed. An agent can reach a correct answer through an unauthorized operation, or follow an authorized path and still return a wrong answer.
 
-- Use repeated runs where variance matters.
-- Define several metrics rather than one headline score.
-- Version the complete system under evaluation.
+A trace should distinguish model proposals from executed calls and executed calls from committed effects. Include stable task and attempt IDs so events can be joined. Record model identity, prompt version, package versions, dataset version, relevant parameters, and timing. Use hashes to identify exact artifacts, while retaining the artifacts or a controlled way to retrieve them; a hash alone cannot reproduce missing content.
 
-### Outcome and trajectory answer different questions
+Logs also have limits. They record what the instrumentation observes. Missing spans or a process crash can leave an incomplete trace. Record attempt start before expensive work and flush durable records where interruption would otherwise erase the attempt. The course runner keeps an attempt journal in addition to completed records so interrupted work can be reconciled.
 
-Outcome evaluation asks whether the final answer or task result is correct. Trajectory evaluation asks whether the agent used appropriate tools, safe actions, efficient steps, and acceptable time and cost.
+## Worked example: the denominator changes the story
 
-- Exact match suits unambiguous answers.
-- Execution tests suit code and queries.
-- Trajectory metrics localize the failing step.
-- Safety and policy adherence belong in trajectory evaluation.
+Suppose ten attempts produce eight correct answers, one wrong answer, and one timeout. Success per attempt is $8/10=0.8$. Success among completed answers is $8/9\approx0.889$. Both numbers describe something, but the second excludes the timeout. If a user experiences the timeout as failure, reporting only completion-conditional accuracy overstates the service's success rate.
 
-### Objective scorers are preferable where available
+Now imagine a revision produces the same eight correct answers, no wrong answer, and two timeouts. Completion-conditional accuracy becomes 1.0, while success per attempt remains 0.8. The revision did not increase overall successful service in this example. It changed the failure distribution. That may still matter, but it is a different claim.
 
-Execution-based and exact scoring are easier to reproduce than reference similarity or an LLM judge. For RAG, retrieval and generation need separate metrics; for memory and multi-agent systems, evaluate recall, handoffs, agent-specific errors, and total cost.
+Keep scheduled-but-unattempted work separate as well. If a request budget stops the run after ten of twenty planned attempts, the remaining ten did not fail due to model behavior; they were not run. Report scheduled, attempted, completed, correct, failed, and unattempted counts explicitly.
 
-- RAG: retrieval recall/precision/MRR plus faithfulness and relevance.
-- Memory: right item, right time, correct use, appropriate forgetting.
-- Multi-agent: handoff quality, ownership, synthesis, and call budget.
+## Development and held-out data
 
-### Benchmarks measure systems, not just base models
+Development cases guide prompt and code changes. Held-out cases estimate behavior on examples not used for those changes. If a student repeatedly inspects held-out failures and edits the prompt to fix them, those cases have become development data. A new holdout is needed for a fresh estimate.
 
-GAIA tests multi-step assistant behavior, SWE-bench Verified tests repository issue resolution through execution, and tool-dialogue benchmarks test policy adherence. Scores depend on the model, prompt, tools, interface, scaffold, and evaluation harness.
+A tiny held-out set is useful for demonstrating procedure but gives limited statistical precision. Under an independent Bernoulli model for $n$ attempts with success estimate $\hat p$, a common approximate standard error is:
 
-- Watch for training-data contamination.
-- Weak tests may accept incorrect solutions.
-- Benchmark tasks may not match production distribution.
-- Ask whose system produced the number.
+$$
+\operatorname{SE}(\hat p)=\sqrt{\frac{\hat p(1-\hat p)}{n}}.
+$$
 
-### LLM-as-judge is flexible but biased
+This expression assumes independent observations and is not a reliable interval procedure at extreme proportions or very small samples. Repeated attempts on the same task are clustered observations: they share task difficulty. Treating every repeat as an independent new task can make uncertainty look too small. Report per-task results and the sampling design before choosing an interval method.
 
-A judge model can score open-ended work at scale, but may favor position, verbosity, style, or its own outputs. Explicit rubrics, pairwise comparisons, swapped order, calibration against humans, and multiple judges reduce these risks.
+For the classroom, begin with transparent counts and paired outcomes. Avoid strong generalization from a few cases. A larger evaluation should use a justified sampling plan and uncertainty method suited to the data, including clustering when relevant.
 
-- Prefer checkable criteria over a vague quality score.
-- Blind the judge to irrelevant identity information.
-- Audit disagreements and drift.
+## Paired comparisons and interventions
 
-### Tracing turns evaluation into engineering
+A paired design runs two conditions on the same task. For example, compare clean evidence with evidence containing one misleading cue. This controls task identity, though model sampling and time-dependent provider behavior can still vary. Randomizing run order reduces systematic order effects; recording the seed documents the scheduling procedure, not necessarily the provider's internal randomness.
 
-A run trace is a tree of spans for model calls, tools, retrieval, and agents. Each span records inputs, outputs, timing, tokens, cost, errors, and relevant metadata. Offline eval protects releases; online eval monitors live behavior; CI gates block regressions.
+For binary outcomes, count pairs where both conditions succeed, both fail, only A succeeds, and only B succeeds. Suppose A alone succeeds on four tasks and B alone succeeds on two. The observed difference is two successes over the number of paired tasks. This is more informative than comparing two unpaired averages without knowing which tasks changed.
 
-- Build representative tasks with expected outcomes.
-- Include hard, edge, adversarial, and safety cases.
-- Run the same set on prompt, model, tool, or dependency changes.
-- Alert on quality, latency, cost, and safety drift.
+An intervention tests the effect of the changed input under the experimental conditions. It does not automatically identify the model's complete reasoning process. CHIVE provides a research example of using counterfactual changes to examine explanations [@chive]. Our lab uses a much smaller behavioral experiment and should state that scope.
 
-### A run manifest makes comparisons reviewable
+## Judges and objective checks
 
-Record the complete setup and every attempted run. A completed answer can be wrong, and an infrastructure failure is a different outcome. Fixed cases and explicit denominators make a comparison inspectable.
+Exact comparison is appropriate when a unique answer is well defined. Numeric tolerances may be appropriate for floating-point calculations, but the tolerance must follow the task requirements. For open-ended explanations, a rubric can score completeness, support, and contradictions. A model judge can assist, but it is another fallible component.
 
-- Store model ID, prompt hash, and dependency versions.
-- Record attempted and completed runs separately.
-- Keep outcome scoring separate from resource use.
+Test a judge against examples whose defects are known. Swap answer order in pairwise judgments, hide irrelevant model identity, and include concise correct answers alongside fluent incorrect ones. Disagreement with human review is data to investigate, not a nuisance to remove. The MT-Bench/Chatbot Arena study examines LLM-as-judge behavior and biases in its evaluation setting [@llm-judge].
 
-## Exam-ready summary
+The scorer must not reward superficial compliance at the expense of the task. A citation-membership scorer will accept an existing but irrelevant evidence ID. A code test suite may miss an important edge case. Build negative examples that would fool an incomplete scorer, then revise the scoring method or narrow the claim.
 
-- Evaluation is continuous system steering, not a final phase.
-- Measure both task success and the path taken.
-- Treat benchmark scores as scaffold-dependent evidence.
-- Trace every model, tool, retrieval, and agent step.
+## Reading benchmarks correctly
 
-## Self-test
+SWE-bench evaluates repository issue resolution, GAIA evaluates assistant questions requiring multiple capabilities, and tau-bench evaluates tool–agent–user interaction in defined domains [@swebench; @gaia; @tau-bench]. Each benchmark packages tasks, environments, and scoring conventions. A score belongs to a tested system under those conventions.
 
-1. Why is agent evaluation harder than single-answer evaluation?
-2. Give four outcome metrics and four trajectory metrics.
-3. What makes execution-based evaluation strong?
-4. How can benchmark contamination and weak tests mislead?
-5. What biases affect LLM-as-judge?
-6. How should an evaluation distinguish a wrong answer from an API failure?
+Comparing scores requires checking the model, tools, harness, allowed resources, task split, and failure handling. The 2026 OpenAI harness report describes a particular benchmark result changing with two harness settings [@harness-report]. The course takeaway is to version and evaluate the surrounding system; the reported effect is not a transferable improvement factor for Gemini.
 
-## Assessed practice
+Benchmark familiarity can also leak into development. Public tasks are convenient for debugging but may be unsuitable as the only evidence of generalization. A course project should include task-specific held-out cases and report what was used during prompt development.
 
-Run the offline evaluation command, inspect its JSONL records, and test the failure path. For live inference, predeclare a model and budget before using the held-out split.
+## The course evaluation runner
 
-**Acceptance check:** A fresh rerun produces a manifest and one record per attempted case. Interrupted or failed requests do not disappear from the denominator.
+The supplied runner supports fixture and separately enabled live modes. Fixture mode uses scripted model behavior through the actual SDK loop to test accounting and failure paths. Its perfect answer rate on a toy dictionary task is not model intelligence: the task is intentionally solvable by direct lookup. Live mode requires an explicit model, API access, and cost acknowledgement.
 
-**Lab:** labs/07_agents_sdk_evaluation.ipynb
+A run produces a manifest, attempt journal, result records, and summary. Inspect individual failures before quoting the summary. If the process is killed between attempt start and final recording, reconcile the journal with the results rather than silently dropping the started attempt. The included cancellation test covers a controlled interruption path; it is not an exhaustive crash-consistency proof.
 
-## Reading and evidence
+## Exercises
 
-- **P3** [Would this change your answer?](https://arxiv.org/abs/2608.16747). Anthropic/Fellows preprint, arXiv v1, 2026-08-17. CHIVE tests counterfactual prompt changes. Generated explanations remain hypotheses. Official post: August 21.
-- **R2** [How enabling two settings tripled our scores on the ARC-AGI-3 benchmark](https://openai.com/index/how-two-settings-tripled-our-arc-agi-3-scores/). OpenAI research post, 2026-07-29. A specific harness experiment. Its result does not estimate the effect of context changes in Gemini.
+1. Twelve attempts yield nine correct, one wrong, and two timeouts. Compute success per attempt and success per completion.
+2. Explain why ten repetitions on one task do not provide the same coverage as one attempt on ten different tasks.
+3. Construct an adversarial example for a citation-membership-only scorer. Improve the scoring contract.
+4. Define a paired experiment comparing one-pass and corrective retrieval. Predeclare the dataset, stopping rules, and primary metric.
+5. Run the fixture evaluation and injected failure mode. Reconcile the manifest, journal, individual records, and denominator. State exactly what the fixture validates.
 
-## Source basis
+## Further study and laboratory connection
 
-The original structure follows `11-evaluation-observability.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.
+Lab 7 and the evaluation runner are the practical companion. Read one benchmark paper and identify its task, scoring rule, and system boundary before quoting any result. Use the submission template to separate observations, interpretations, and limitations. A reproducible negative result is stronger coursework than an unsupported success story.

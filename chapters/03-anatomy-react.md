@@ -1,103 +1,87 @@
-# 03. Agent Anatomy and ReAct
+# Agent anatomy and the execution loop
 
-> ReAct operationalizes agency as a bounded Thought-Action-Observation cycle whose evidence comes from the runtime, not the model.
+## Why a loop is needed
 
-## Learning objectives
+The equipment assistant does not know whether a requested item is available until it queries inventory. The inventory response may reveal that the only matching camera is already booked. A second decision is then required: search alternatives, ask whether the date can change, or end with an unavailable result. A single model response cannot observe the outcome of a tool that has not yet run.
 
-- Engineer the four agent components
-- Trace a ReAct episode
-- Implement safe parsing and termination
-- Recognize horizon and format failures
+ReAct interleaves model-generated reasoning and actions with observations returned from an environment [@react]. The architectural idea is that later decisions can incorporate newly obtained evidence. In a deployed system, we need to make this loop explicit enough that software can verify what was proposed, what actually executed, and why the run stopped.
 
-## Core notes
+We will use a simplified trace. The model requests `inventory_lookup` for an item and date. The runtime validates the request and calls the tool. The tool returns a structured unavailable result. The runtime appends that observation to the conversation. The model can then request a different lookup or give an honest final answer. The observation must come from the actual tool execution; a model-generated sentence beginning “Observation:” is not a substitute.
 
-### The profile is an executable contract
+## Components and responsibilities
 
-The system prompt defines role, objective, tool menu, output protocol, constraints, stopping behavior, and escalation. It should read like a precise specification for a careful colleague, with examples where the protocol is easy to misunderstand.
+An agent profile includes task instructions, available tool descriptions, output requirements, and relevant limits. The model uses this profile and current context to propose a next step. A dispatcher maps an allowed tool name to an implementation. The implementation accesses the environment. A state manager records conversation and execution state. A controller decides whether to continue, stop, request input, or escalate.
 
-- State success before listing implementation details.
-- Give each tool a description and example call.
-- Specify an exact output protocol and stopping condition.
-- Add guardrails and human escalation rules.
+These responsibilities should be visible even when a framework packages them together. A failure in the tool implementation is not fixed by changing the model's role description. A missing observation is not fixed by improving retrieval ranking. Separating components lets us test each boundary with controlled inputs.
 
-### Memory turns a stateless model into a stateful system
+For example, a dispatcher should use the registry passed to it. If a test injects a fake inventory tool but dispatch still reaches a global production registry, the test cannot isolate the behavior. Dependency injection means supplying the dependency explicitly so that a test can replace it. It is an architectural property, not merely a testing convenience.
 
-Short-term memory is the running context; long-term memory is an external store read and written through tools. The transcript is the immediate state of ReAct because each next decision depends on prior actions and observations.
+## Text protocols and structured tool calls
 
-- The application or provider must carry the bounded conversation state.
-- Long-term memory is scalable but requires explicit retrieval.
-- Only re-supplied information can influence the next model call.
+A historical teaching loop might parse strings such as `Action: lookup[C17]`. This is easy to inspect but has ambiguity: a reply can contain several action markers, malformed brackets, or a fabricated final answer after an action. A parser must define which forms are accepted and reject ambiguous combinations. A stop sequence can help control generation format where the provider supports it, but it does not validate arguments or enforce permissions.
 
-### Planning ranges from next-step choice to search
+Structured function calling gives the runtime a more explicit request representation. A tool declaration describes a name and argument schema. The returned request is still only a proposal. The runtime checks the requested tool, validates arguments, performs any authorization, and constructs the corresponding tool result. Google's documentation describes this request/result cycle for Gemini; preserving the returned model content and tool-call correspondence is important to the protocol [@gemini-tools].
 
-Decomposition creates subgoals, reasoning chooses actions, reflection critiques progress, and search explores alternatives. ReAct uses the simplest planner: decide only the next action from current evidence.
+A useful mental model is a correspondence table: request identifier, tool name, arguments, execution status, and result. When a response contains multiple calls, each result must be attached to its matching request. Reordering results without preserving that relationship can cause a correct calculator value to be interpreted as an inventory answer.
 
-- Reactive planning adapts quickly to observations.
-- One-step lookahead is efficient but myopic.
-- Reflection and plan-and-execute address longer horizons.
+## A bounded controller
 
-### The runtime owns the action boundary
+The following is pseudocode. It specifies behavior without claiming to implement a particular SDK.
 
-The model proposes a tool and arguments. The runtime parses or receives the structured call, validates types and policy, authorizes it, executes the tool, and appends the real result as an observation. The model must never fabricate the observation.
+```text
+state = initial_request_and_instructions
+while model_requests < request_limit and before_deadline:
+    reply = ask_model(state)
+    record(reply)
+    if reply contains a valid final response and no pending calls:
+        return validate_final(reply)
+    calls = parse_and_validate_requests(reply)
+    if calls are empty:
+        return failure("no usable response")
+    for call in calls:
+        if tool_budget_exhausted:
+            return failure("tool budget")
+        result = authorized_dispatch(call)
+        state = append_matching_result(state, call, result)
+return failure("request limit or deadline")
+```
 
-- Use supported stop sequences as format controls in text protocols.
-- Prefer native tool calling in production when available.
-- Sandbox, scope permissions, and confirm consequential actions.
+The pseudocode deliberately separates model requests from tool calls. One model response may contain several tool requests; conversely, a model request may produce no tool call. A request limit of four therefore does not imply a tool-call limit of four. A practical controller tracks both, as well as elapsed time and output size.
 
-### ReAct interleaves deliberation and grounding
+The controller must decide what to do when a call fails. An unknown tool is a validation failure. A network timeout is an infrastructure failure. An unavailable item is a valid domain result. Returning the same generic “error” for all three removes information the next decision needs. Error records should be structured, bounded, and free of secrets.
 
-Each iteration contains a Thought from the model, an Action from the model, and an Observation from the environment. Acting grounds later reasoning in evidence, while reasoning improves tool selection compared with an act-only policy.
+## Worked example: a complete tool round-trip
 
-- Thought chooses the next step.
-- Action names and parameterizes a tool.
-- Observation records the runtime result.
-- Final Answer ends the episode.
+Suppose the model proposes request `r1`: look up camera C17 for date D. The dispatcher verifies that the item identifier and date are valid and that the authenticated user may read this inventory. The tool returns `available = false`. This result is stored with request ID `r1`. The next model input contains the original request, the proposed call, and its actual result.
 
-### A correct loop is bounded and observable
+The model then proposes `r2`: look up camera C18 for D. That tool returns `available = true`. The model's final answer recommends C18 and explains that availability was observed, while the booking remains uncommitted. We can now assess both the final answer and its trajectory: two inventory calls, no reservation effect, and two matching observations.
 
-Termination must include a final-answer condition plus hard step, token, cost, or time budgets. The trace should be captured so evaluators can inspect tool choice, observations, errors, efficiency, and whether the final claim is grounded.
+Consider an incorrect implementation that runs the first tool and prints its result, then ends. A human reading the notebook may infer the next step, but the model has not received the result. The implementation has demonstrated dispatch, not a complete model–tool–model cycle. This distinction is why Lab 5 asserts properties of the second model request rather than merely checking printed output.
 
-- Common failures: format drift, greedy parsing, fabricated observations.
-- Long horizons compound errors and can make the agent lose the goal.
-- No backtracking means a bad line may persist.
-- Native schemas reduce format drift but not reasoning errors.
+Now consider a response containing three calls when only two tool calls remain. The runtime needs an explicit policy. It can reject the batch before execution, or execute a permitted prefix and return a budget stop. Either choice must be documented; silently executing all three violates the stated budget. For operations with effects, partial execution also requires a record of exactly which operations occurred.
 
-### A complete tool cycle returns observed results
+## Invariants and termination
 
-A native tool request is only part of the protocol. After validation, the runtime returns each result with the matching call identity and continues the model exchange. Preserve the provider's complete response content and cap the loop.
+An invariant is a condition that must remain true across state transitions. For a tool loop, useful invariants include: every executed call passed validation; every recorded successful result corresponds to an actual execution; every result matches an issued request; and no call executes after its budget is exhausted.
 
-- Dispatch through the supplied tool registry.
-- Keep model rounds and tool calls as separate budgets.
-- Test empty responses and multiple calls.
+Termination also needs an invariant about progress or resources. “Repeat until the model is satisfied” is not a bound. A hard counter can ensure that the loop eventually stops, provided individual operations also terminate or time out. An iteration cap alone cannot stop a single blocking network request. Bounded loops and bounded operations solve different problems.
 
-## Exam-ready summary
+A successful terminal state should not conceal unresolved calls. If the model returns both a final answer and pending actions, the controller needs a deterministic rule rather than accepting whichever part appears first. The repaired text loop chooses strict parsing; the native loop follows the provider protocol and explicit application limits. The exact rule can vary, but ambiguity must not decide execution.
 
-- The model proposes actions; the runtime validates and executes.
-- ReAct alternates Thought, Action, and real Observation.
-- Validate the complete protocol and enforce runtime budgets.
-- Tracing reveals both outcome and trajectory failures.
+## Testing without a model account
 
-## Self-test
+A scripted fake model can return a call on its first invocation and inspect the observation on its second. This tests that the application constructs the correct next request. A fake tool can return unavailable, raise a timeout, or reject an invalid argument. These fixtures exercise the state machine without relying on live sampling.
 
-1. What belongs in a robust agent profile?
-2. Who produces each part of Thought-Action-Observation?
-3. What can a supported stop sequence prevent, and what must the runtime still check?
-4. Compare text parsing with native function calling.
-5. List the required termination conditions for a safe loop.
-6. Which state must survive the model, tool, and model round-trip?
+Such tests establish the behavior of the controller under the scripted inputs. They do not establish how often Gemini chooses a valid tool or how it behaves on unseen requests. Live tests are a separate layer. Confusing these layers would make a perfect fixture pass rate look like model accuracy.
 
-## Assessed practice
+## Exercises
 
-Complete Lab 5. Demonstrate that the second model request contains the executed tool result and its matching ID. Replace the registry with a fake and prove that the replacement runs.
+1. Draw the sequence for two inventory calls followed by a final answer. Mark the author of each message: user, model, runtime, or tool.
+2. A model response requests five tools and the request cap is three. Explain why the model-request cap alone does not prevent five executions.
+3. Define terminal statuses for malformed output, unavailable inventory, timeout, permission denial, and successful completion. Which are valid task outcomes?
+4. Write a fake-model test that fails if the second model request omits the first tool result. Add an unknown-tool case and a zero-budget case.
+5. Explain how a loop with a finite iteration count can still hang. Specify the additional bound required.
 
-**Acceptance check:** The offline round-trip and replacement-registry tests pass. A missing result or exhausted budget yields an explicit stop reason.
+## Further study and laboratory connection
 
-**Lab:** labs/05_gemini_bounded_tools.ipynb
-
-## Reading and evidence
-
-- **S1** [Gemini function calling](https://ai.google.dev/gemini-api/docs/function-calling). Google documentation, accessed, 2026-09-09. Check model support and preserve complete model content when returning function responses.
-
-## Source basis
-
-The original structure follows `03-anatomy-react.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.
+Read the architecture in [@react], then work through the repaired ReAct foundation and Lab 5. The lab's native protocol is a modern implementation exercise, not a reproduction of the original paper's benchmark. In your report, include one successful trace, one infrastructure failure, and one budget stop, with no invented observations.

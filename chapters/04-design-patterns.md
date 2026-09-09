@@ -1,101 +1,81 @@
-# 04. Agentic Design Patterns
+# Designing control flow
 
-> The best architecture keeps control in code when possible and hands decisions to models only where dynamic judgment adds value.
+## Decomposition as an engineering decision
 
-## Learning objectives
+A large instruction such as “handle this equipment request” combines several kinds of work: interpretation, evidence retrieval, eligibility checking, availability lookup, and communication. Decomposition separates these responsibilities so that each can have a clear input, output, and failure condition. It is useful even when every component uses the same model.
 
-- Recognize five workflow patterns
-- Compare workflow and agentic control
-- Compose patterns into a system
-- Estimate reliability and cost trade-offs
+The central question is not how many prompts to create. It is where intermediate results need validation and which decisions should be adaptive. If eligibility is an exact database rule, asking a model to judge it introduces uncertainty into a deterministic step. If the user's description is ambiguous, a language component may be useful before the rule can run.
 
-## Core notes
+Anthropic's engineering discussion organizes common workflows as chaining, routing, parallelization, orchestration, and evaluator–optimizer loops [@effective-agents]. We use those names as a vocabulary, then derive their behavior through the equipment case. These patterns describe arrangements of components rather than guaranteed improvements.
 
-### The augmented LLM is the reusable building block
+## Chains and intermediate contracts
 
-Retrieval, tools, and memory turn a plain model call into an augmented LLM. Design patterns connect one or more augmented LLMs with control flow. The central design question is whether code or the model decides what happens next.
+In a chain, the output of one stage becomes input to the next. Our first chain could be interpretation, retrieval, validation, and answer composition. Each transition should have a contract. Interpretation returns a normalized date and requested properties. Retrieval returns records with identifiers and provenance. Validation returns eligible candidates or a structured reason for failure. Composition produces an answer from the validated result.
 
-- Code-directed workflows are predictable and testable.
-- Model-directed agents are flexible but variable.
-- Add autonomy only when decisions cannot be enumerated reliably.
+Intermediate contracts prevent one stage from silently inventing what the next stage needs. If interpretation cannot resolve “next Tuesday,” it returns an unresolved-date status. It does not guess a date to keep the chain moving. A later inventory stage must reject unresolved inputs rather than reinterpret them independently.
 
-### Chaining and routing encode known structure
+A chain creates failure propagation. If the date is wrong, every later operation may be internally correct and still answer the wrong question. Under a deliberately simplified assumption that $k$ stages succeed independently with probabilities $p_1,\ldots,p_k$, complete success has probability:
 
-Prompt chaining applies fixed ordered steps and can place validation gates between them. Routing classifies an input and selects a specialized handler. Both retain explicit control paths.
+$$
+P(\text{all stages succeed})=\prod_{i=1}^{k}p_i.
+$$
 
-- Chaining fits outline-draft-polish style sequences.
-- Gates can check schema, rules, or quality.
-- Routing needs calibrated accuracy and a fallback lane.
-- Hard or low-confidence cases can escalate.
+For four stages with success probability 0.95 each, the product is approximately 0.8145. Independence is an assumption for this calculation, not a claim about model errors. In practice, a single misinterpreted request can correlate failures across stages. The calculation illustrates why evaluating components separately cannot replace end-to-end evaluation.
 
-### Parallelization trades compute for speed or reliability
+## Routing and fallback
 
-Sectioning divides independent work and aggregates results, reducing wall-clock time. Voting runs the same task several times and aggregates answers, increasing cost in exchange for robustness.
+A router selects a path based on the request. An exact catalog identifier can go to a lookup path. A policy question can go to retrieval. A request missing required information can go to clarification. Routing is valuable when the paths have genuinely different requirements; otherwise it may add a classification problem without removing much work.
 
-- Parallelize only independent subtasks.
-- Aggregation is a distinct step that can fail.
-- Reserve voting for decisions where redundancy is worth the cost.
+A router needs an explicit fallback. If it must choose among “lookup” and “policy,” a mixed request may be forced into the wrong category. Adding “mixed” is one option. Decomposing the request into independently validated subrequests is another. Asking for clarification may be appropriate when the ambiguity changes the allowed action.
 
-### Orchestrator-workers creates subtasks dynamically
+Measure routing mistakes by their consequences. Sending a simple lookup through a slower path wastes resources. Sending a write request through a read-only path might fail harmlessly. Sending a read request into an automatically committing path could cause an unwanted effect. A confusion matrix tells us which labels were confused; a task-specific cost model tells us why the confusion matters.
 
-An orchestrator decomposes the current input, dispatches variable subtasks to workers, and synthesizes their outputs. Unlike a chain, the exact work plan is not known in advance.
+## Parallel work and joins
 
-- Workers may be prompts, tools, or complete agents.
-- The orchestrator must track state and integrate results.
-- Dynamic decomposition increases flexibility and evaluation burden.
+Some operations do not depend on each other's outputs. Once the item and date are resolved, policy retrieval and inventory lookup may run in parallel. The join stage waits for the required results and combines them. If each branch has latency $L_i$, a simplified serial latency is $\sum_i L_i$, while ideal parallel latency is $\max_i L_i$ plus coordination overhead.
 
-### Evaluator-optimizer and reflection require grounded criteria
+Parallel execution does not automatically reduce total work. The same two service calls still occur. It may also increase contention or exceed a provider concurrency limit. If one branch fails, the join must decide whether to wait, cancel other branches, produce a partial answer, or fail the request. “Run concurrently” specifies scheduling; it does not specify failure semantics.
 
-A generator produces an attempt, an evaluator checks it, and feedback drives revision. The loop improves reliably when criteria are externally verifiable, such as tests, schemas, calculations, rubrics, or reference answers.
+A dependency graph makes these choices visible. Interpretation precedes both policy and inventory queries. Eligibility checking depends on policy and identity. Proposal construction depends on eligibility and inventory. An edge means that a result is required, not merely that one box was drawn before another. Removing an edge to make a diagram faster can change the meaning of the task.
 
-- Vague 'is this good?' critics may rubber-stamp outputs.
-- Tool-grounded critics can verify objective properties.
-- Every refinement loop needs a stop and cost budget.
+## Worked example: the critical path
 
-### Patterns compose, so failure controls must compose too
+Suppose interpretation takes 1 second, policy lookup 2 seconds, inventory lookup 3 seconds, and final composition 1 second. Ignore overhead for this invented example. A serial chain takes $1+2+3+1=7$ seconds. If policy and inventory are independent after interpretation, parallel execution takes $1+\max(2,3)+1=5$ seconds.
 
-A router can select an agent, an orchestrator can dispatch ReAct workers, and an evaluator can check the synthesis. Humans can approve, correct, or receive escalations at consequential boundaries.
+Now suppose inventory lookup requires a location selected from the policy. The two branches are no longer independent. The 5-second estimate is invalid because it starts inventory before its input exists. The correct sequence returns to 7 seconds under the same durations.
 
-- Anti-patterns: agent where workflow suffices, too many tools, unbounded loops.
-- Each additional model call increases cost and failure opportunity.
-- Use the simplest pattern whose control assumptions match the task.
+If a third independent branch takes 8 seconds, adding it raises the critical path even though other branches finish early. A fast average branch does not imply a fast join. For user-facing latency, inspect which branch determines completion and whether that branch is essential to the answer.
 
-### An extra stage must justify its cost
+## Orchestrators and workers
 
-A reviewer or worker adds another opportunity to help and another opportunity to fail. Use identical cases to compare a baseline with the proposed composition. Count review and coordination calls when evaluating the whole system.
+An orchestrator chooses subtasks dynamically and assigns them to workers. In our service, a complex field expedition might require cameras, audio equipment, and power supplies. A coordinator could create separate research tasks after interpreting the request. Each worker should return a bounded result with evidence, unresolved issues, and resource use.
 
-- Use a fixed baseline before changing the architecture.
-- Score outcomes and failures with the same rules.
-- Account for overhead even when review leaves the answer unchanged.
+The coordinator owns synthesis. It must detect incompatible assumptions: one worker may interpret the trip as three days while another uses five. Merely concatenating their outputs produces a document with hidden contradictions. A shared task specification should identify dates, locations, eligibility assumptions, and the meaning of completion.
 
-## Exam-ready summary
+Dynamic decomposition requires bounds on the number of workers and their budgets. A worker should not recursively delegate forever. If each of $b$ workers creates $b$ more workers for $d$ levels, the number of worker nodes grows as a geometric sum. Even a shallow hierarchy can multiply work. Chapter 8 examines the additional information and authority problems created by this structure.
 
-- Patterns connect augmented LLMs with different control structures.
-- Chaining, routing, parallelization, orchestrator-workers, and evaluator-optimizer are workflows.
-- Tool use, reflection, planning, and multi-agent systems hand more control to models.
-- Ground checks and budgets at every loop boundary.
+## Review loops and the value of feedback
 
-## Self-test
+A reviewer can inspect a proposal and request revision. The useful question is what information allows the reviewer to detect a mistake. A deterministic validator can reject an unknown catalog ID. An independent inventory read can discover stale availability. A second model reading exactly the same incomplete evidence may repeat the same misconception.
 
-1. What distinguishes a workflow from an agent?
-2. Compare prompt chaining and orchestrator-workers.
-3. Name the two forms of parallelization and their goals.
-4. Why do evaluator-optimizer loops need verifiable criteria?
-5. Give a valid composition of three patterns.
-6. How can a reviewer increase cost without increasing correctness?
+Separate **critique generation** from **acceptance authority**. A critique may suggest that the policy citation is weak; a source check determines whether the cited passage actually supports the claim. A revision loop should end when its acceptance criteria pass, its budget expires, or no justified improvement is available. It should not keep rewriting an already correct response solely to sound more polished.
 
-## Assessed practice
+One way to reason about review is to compare expected benefit with overhead. Let $q$ be the probability that the current answer contains a relevant error, $r$ the reviewer's probability of detecting and correcting it, and $h$ the value of avoiding that error. A rough benefit term is $qrh$. This is only a model for planning: the quantities require measurement and the reviewer may introduce new errors. Include that possibility and the extra cost before claiming the loop is beneficial.
 
-Compare a single catalog agent with an objective evidence check. Specify when an LLM reviewer would add information that the objective check lacks.
+## Mapping patterns to LangGraph
 
-**Acceptance check:** Include a case where review adds no value and one where it changes an incorrect proposal. Count all calls in the live variant.
+A graph representation records nodes, state, and transitions explicitly. In the course implementation, a node performs a bounded piece of work and returns a state update; conditional edges select subsequent work. The framework manages execution, but the application still defines the meaning of state fields and the conditions for completion.
 
-**Lab:** labs/07_agents_sdk_evaluation.ipynb
+If a retrieval node returns an empty list, the conditional edge can select one repair attempt. If the repaired query also fails, the graph selects abstention. This is an interpretable policy: the repair budget is part of the graph's state, not a vague instruction to “try harder.” Lab 6 implements this pattern, and Chapter 7 adds durable state.
 
-## Reading and evidence
+## Exercises
 
-- **R1** [Patterns and problems in emerging multiagent systems](https://www.anthropic.com/research/multiagent-systems). Anthropic research post, 2026-08-13. Controlled coordination experiments. Compare scope and budgets before interpreting the findings.
+1. Draw a dependency graph for interpreting a request, checking eligibility, checking inventory, and preparing a proposal. Explain every dependency.
+2. Recalculate the worked example if policy lookup takes 6 seconds. Give serial and valid parallel latencies, ignoring overhead.
+3. Design a router with an explicit fallback for exact lookup, policy question, and mixed request. Describe one costly misroute.
+4. A reviewer corrects two answers but breaks one previously correct answer. Explain why counting only corrections overstates its value.
+5. Implement a graph that allows at most one query repair. Test an empty first retrieval, an empty second retrieval, and a successful first retrieval.
 
-## Source basis
+## Further study and laboratory connection
 
-The original structure follows `04-design-patterns.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.
+Use [@effective-agents] to compare pattern names with your control-flow diagram. Lab 6 makes a fixed corrective workflow explicit; Lab 7 examines whether review adds measurable value. Your design report should justify each node by the responsibility it owns and each loop by the failure it can repair.

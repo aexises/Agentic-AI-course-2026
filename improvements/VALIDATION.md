@@ -1,5 +1,8 @@
 # Validation record
 
+**Edition note:** This record describes the earlier integrated conspect and lab release. The subsequent full textbook is delivered as Markdown/LaTeX; see [textbook validation](../textbook/VALIDATION.md). The existing 52-page PDF is the earlier conspect, not a compiled version of the new textbook.
+
+
 Checked 9 September 2026 in a clean temporary Python **3.12.14** environment on macOS arm64. Full package versions are recorded in [requirements-lock.txt](../labs/requirements-lock.txt). `pip check` reported no broken requirements in this environment.
 
 ## Completed

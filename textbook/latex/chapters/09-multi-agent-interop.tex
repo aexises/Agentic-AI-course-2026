@@ -1,0 +1,64 @@
+\chapter{Interoperability and delegated work}
+\section{The problem across application boundaries}
+So far, all components could run inside one equipment application. Now suppose the engineering department owns the camera catalog and the media department owns audio equipment. Each department has its own service, authentication, and operating policies. A coordinating application must discover what the remote service can do, submit a bounded request, observe progress, and validate the returned result.
+
+A plain function call hides many of these concerns because the caller and callee share a runtime. Across a network, the callee can accept a task and continue working after the initial request returns. The caller may lose its connection, retry, or cancel. The remote service may ask for more information. Interoperability therefore requires a task lifecycle as well as a payload schema.
+
+This chapter uses A2A version 1.0.0 as a dated protocol reference. The specification defines a task/message model and bindings including JSON-RPC, gRPC, and HTTP/REST \cite{a2a}. We trace the JSON-RPC-over-HTTP arrangement as a teaching choice. The lifecycle below is explanatory; it is not a substitute for the versioned wire schema.
+
+\section{Discovery and capability descriptions}
+Before delegating, the caller needs to know the service identity, endpoint, supported capabilities, and authentication requirements. A2A uses Agent Cards to describe relevant service information \cite{a2a}. A capability advertisement helps a caller discover an interface, but it does not establish that the service is authorized for the user's data or competent on the requested task.
+
+For our service, a remote media catalog might advertise equipment recommendations and availability checks. The caller should distinguish these from booking commitment. An appealing description such as “full service equipment assistant” is not a precise grant of authority. Check the declared operation, the credential scope, and the local delegation policy.
+
+Discovery itself is a trust boundary. A malicious or stale service description can point to an unintended endpoint. The application should have an approved discovery process, verify the service identity, and avoid treating arbitrary text in a card as instructions to expand access. The exact authentication mechanism depends on the deployment; the book does not prescribe one credential format for every system.
+
+\section{Messages, tasks, and artifacts}
+A message carries content exchanged during the interaction. A task gives the work a stable identity and lifecycle. An artifact is a produced result, such as a candidate list or a reservation proposal. Keeping these concepts separate prevents a progress message from being mistaken for a completed deliverable.
+
+Suppose the media department replies, “Searching the archive.” That is progress, not an answer. A later result may list two microphones and the evidence supporting their suitability. The coordinating application should accept that result only after checking the task status and the artifact contract. Receiving a syntactically valid document is not the same as completing the delegated objective.
+
+A simplified lifecycle can include submitted, working, waiting for input, completed, failed, and canceled states. The exact protocol vocabulary and allowed transitions must come from the selected specification \cite{a2a}. Application code should preserve distinctions among these outcomes rather than collapse every non-success into an empty list.
+
+\section{Worked example: a delegated availability check}
+The coordinator creates a task asking the media service to find one recorder available on date D. The request includes the date, relevant eligibility constraints, and a read-only scope. It does not grant authority to commit a reservation. The remote service accepts the task and returns its task identifier.
+
+The coordinator records that identifier and observes progress. The remote service then requests clarification because the use location affects the applicable policy. The coordinator can return the question to the user or resolve it from already authorized information. It should not invent a location to keep the task moving.
+
+After clarification, the service returns a recorder identifier, availability observation time, and source references. The coordinator checks that the date and location match the original request, that the artifact is complete, and that the result is not already stale under its freshness rule. It then constructs a combined proposal with the camera result from another service.
+
+The user may cancel while the remote task is still working. Cancellation is a request and lifecycle event; it is not evidence that every remote effect has been undone. In this read-only example there should be no booking effect. For effectful delegation, the system needs explicit reconciliation and compensation semantics. Never infer rollback merely from a canceled status label.
+
+\section{Authentication, authorization, and evidence}
+Authentication answers who is making a request or operating a service. Authorization answers what that identity is allowed to do in this context. Evidence validation answers whether the returned result supports the claim. These questions remain separate after adopting an interoperability protocol.
+
+An authenticated remote service can still return an outdated policy. A valid user credential can still lack permission to reserve a particular item. A correctly authorized availability check can still fail due to a network error. Mixing these categories makes both logs and user-facing explanations misleading.
+
+Delegated authority should be no broader than necessary. A remote recommendation worker may need a project date and equipment constraints but not a complete student profile. A booking worker may need a specific approval record but not the power to change the approval. Record what information crosses the boundary and why the receiving component needs it.
+
+\section{MCP and A2A together}
+MCP and A2A address different interaction surfaces. MCP can connect the local application to tools and data; A2A can describe delegated work between separately operated agent services. A remote service reached through A2A may itself use MCP tools. This composition does not make the boundaries disappear.
+
+Trace one request across the layers. The coordinator submits a read-only recommendation task to a remote agent. The remote agent calls its local inventory tool. That tool accesses a database under the remote service's credentials. The returned artifact travels back to the coordinator. Each hop has a caller, credentials, data scope, and validation responsibility. The coordinator cannot assume the remote tool's access control matches its own merely because the final response uses a standard format.
+
+The practical design question is whether delegated autonomy is necessary. If the remote operation is a single bounded lookup, an ordinary service endpoint may be sufficient. A task-oriented protocol becomes useful when progress, clarification, artifacts, or extended lifecycle management are part of the contract.
+
+\section{Timeouts, retries, and versioning}
+A timeout means the caller did not receive a timely result. It does not establish whether the remote task was created or completed. Retrying task creation without a deduplication strategy can create duplicate work. Retain the remote task identifier whenever available, and distinguish creating new work from querying the status of existing work.
+
+Version both the protocol binding and the application artifact schema. A protocol-level message can be valid while its artifact lacks a field required by the receiving application. Backward compatibility should be tested with recorded payloads, including unknown optional fields, missing required fields, and unexpected terminal states.
+
+An operational contract should specify who owns timeouts, which results remain retrievable, how long task state persists, and what cancellation means. These are design and service-agreement choices. Do not assume that selecting a protocol automatically supplies the retention or recovery behavior the course application needs.
+
+\section{Exercises}
+\begin{enumerate}
+\item Distinguish a progress message, a task state, and a completed artifact for a remote equipment search.
+\item Write a delegated request that permits recommendation but forbids commitment. Identify the minimum information the remote worker needs.
+\item A task-creation request times out. Explain why blindly creating another task may be incorrect, and describe a reconciliation strategy.
+\item Explain why authenticating a remote service does not establish the semantic correctness of its policy answer.
+\item Draw the caller, credentials, and validation responsibility at every hop in a coordinator–remote-agent–inventory-tool interaction.
+\end{enumerate}
+
+\section{Further study and laboratory connection}
+Consult \cite{a2a} for the exact 1.0.0 data model and selected binding, and \cite{mcp-spec} for the tool/data layer. This chapter's exercise is a protocol and trust-boundary design task; the supplied labs do not claim to deploy a remote A2A service. Use Lab 8's approval binding to explain which authorization properties must survive delegation.
+

@@ -1,0 +1,68 @@
+\chapter{Multi-agent systems and coordination}
+\section{Why add another agent?}
+The equipment service now handles an expedition requiring cameras, audio equipment, and portable power. A single bounded agent may still solve the task. Another design assigns each equipment category to a specialist and gives a coordinator responsibility for the final kit. The second design should earn its complexity by improving an identifiable outcome: coverage, latency, modularity, or isolation of responsibilities.
+
+An agent role is a bundle of instructions, context, tools, and authority. Merely changing the role name from “researcher” to “expert reviewer” does not create new evidence or independent knowledge. Two agents with the same model and the same incomplete documents may make the same mistake. Treat specialization as an implementation hypothesis to test.
+
+Anthropic's 2026 multi-agent research post examines coordination, information aggregation, and incompatible objectives in controlled settings \cite{multiagent-report}. The useful lesson for the course is to inspect who has which information and what each participant is trying to achieve. The findings do not establish a universal rate of coordination failure in deployed systems.
+
+\section{Information partitioning}
+A worker needs enough context to solve its assigned subtask. It also needs the shared constraints that make its result compatible with other workers: date, trip duration, carrying capacity, budget, and eligibility assumptions. Omitting these constraints can produce individually plausible but jointly unusable results.
+
+For example, the camera worker chooses a high-quality body, the audio worker chooses a recorder, and the power worker chooses batteries. If the workers never exchange connector requirements, the final kit may not function. A coordinator must specify interface constraints or perform a compatibility check after receiving results.
+
+Information partitioning can reduce the amount each worker processes, but synthesis restores cross-cutting dependencies. A claim such as “all workers completed” is therefore weaker than “the combined plan satisfies the request.” The acceptance test must cover the composition, including conflicts and missing interfaces.
+
+\section{Communication topologies}
+A centralized design sends worker outputs to one coordinator. This provides a clear synthesis owner but makes the coordinator's context and workload important constraints. A peer-to-peer design allows direct exchange, which may be useful for negotiation but creates more possible communication paths. A hierarchy groups workers under intermediate coordinators, reducing some local complexity while adding layers where information can be lost.
+
+The number of possible undirected pairwise links among \(n\) participants is:
+
+\begin{equation}
+\frac{n(n-1)}{2}.
+\end{equation}
+
+This follows by counting \(n(n-1)\) ordered pairs and dividing by two because each undirected pair is counted twice. Six agents have fifteen possible pairwise links. A star with one central coordinator and five workers has five links. These are counts of possible links, not measurements of actual messages or runtime cost. Directed communication and broadcast semantics require a different accounting model.
+
+Choose a topology based on dependencies and ownership. If workers only need common constraints and a final synthesis, a star may suffice. If two workers must negotiate a shared resource, either allow a specific exchange or make the coordinator own that decision. Fully connected communication should not be the default merely because it is possible.
+
+\section{Shared state and message passing}
+Shared-state communication lets participants read and update a common structure. Message passing sends explicit records between participants. Shared state makes information accessible but creates conflict questions: who can overwrite a field, how concurrent updates combine, and whether a reader sees a consistent version. Messages make sender and recipient explicit but may be delayed, duplicated, or out of order in a distributed system.
+
+For the equipment case, workers can return append-only candidate records rather than overwrite a single \texttt{best\_item} field. The coordinator then chooses a combination from a known set of proposals. This design avoids “last writer wins” accidentally deciding the result. If a shared field is necessary, define its owner and merge rule.
+
+An output record should contain the subtask ID, assumptions, recommendation, source IDs, unresolved issues, and resource use. A long unstructured essay is hard to validate and expensive to pass to another model. Structured communication does not prove correctness, but it exposes fields that a validator and coordinator can inspect.
+
+\section{Worked example: shared error versus complementary evidence}
+Suppose three workers receive a copied handbook stating that students can borrow equipment for three days. All three recommend a three-day plan. Their agreement does not create three independent sources; it reflects one shared document. If the current policy allows five days, the team can agree confidently on an outdated answer.
+
+Now give one worker the current policy and require every recommendation to include source version and effective date. The coordinator can detect the disagreement and apply the institution's authority rule. The improvement comes from evidence diversity and conflict resolution, not from the number of voices alone.
+
+A useful classroom experiment compares a single agent with a team on paired inputs. In the clean condition, all receive the relevant current record. In the conflict condition, add an outdated but plausible statement. Keep task scope and budgets explicit. If the team receives more documents or twice as many requests, report that advantage rather than attribute the entire result to collaboration.
+
+\section{Objectives and resource conflicts}
+A camera worker instructed to maximize image quality may choose the heaviest kit. A logistics worker instructed to minimize weight may reject it. Neither participant is necessarily malfunctioning; their local objectives conflict. The system needs a common objective or an explicit negotiation rule.
+
+For the expedition, define hard constraints first: maximum weight, required battery duration, compatibility, and permitted loan period. Then define preferences among feasible kits, such as quality or convenience. A weighted score can help select among feasible proposals, but do not trade away a hard safety or authorization constraint by giving it a small penalty weight.
+
+Shared resources create another conflict. Two workers may both reserve the last battery. Planning-level coordination can reduce this risk, but the inventory service must still enforce availability at commitment. A model conversation is not a database lock. The service is the authority on whether the shared resource can be allocated.
+
+\section{Cost, latency, and failure ownership}
+A team consumes the sum of worker requests plus coordination and synthesis requests. Parallelism may reduce wall-clock latency while increasing total work. Report both. A task that finishes faster at triple the request count presents a tradeoff, not an unconditional efficiency gain.
+
+Failure ownership should be explicit. If one worker times out, the coordinator must decide whether its result is essential. If a worker returns unsupported claims, the coordinator must reject or repair them. If the coordinator cannot reconcile a conflict, it should return a bounded unresolved outcome. Delegation does not remove responsibility for the final answer.
+
+A practical design starts with one agent and adds a role only when its information, tools, or objective differ in a useful way. Keep a termination owner and a global budget. Local worker caps alone are insufficient if the coordinator can keep creating new workers.
+
+\section{Exercises}
+\begin{enumerate}
+\item Compute the possible undirected pairwise links for eight agents and compare them with a star topology. Explain why this does not predict actual message count.
+\item Design an output schema for a power-supply worker. Include the fields needed to check compatibility with camera and audio recommendations.
+\item Explain why three agreeing workers using the same stale source do not constitute independent corroboration.
+\item Design a same-task single-agent/team experiment. Specify information allocation, budget accounting, failures, and the primary outcome.
+\item A worker maximizes quality while another minimizes weight. Separate hard constraints from preferences and define a valid synthesis procedure.
+\end{enumerate}
+
+\section{Further study and laboratory connection}
+Use \cite{multiagent-report} as a research reading about coordination conditions. In Lab 7, compare a single agent, objective review, and optional model review. A useful negative result is that the additional role did not improve the measured outcome. Support that result with records of all attempts and all extra work.
+

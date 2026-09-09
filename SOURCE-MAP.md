@@ -1,8 +1,10 @@
 # Source Map
 
-The original course structure follows the supplied 13-PDF sequence listed below. The 9 September 2026 edition adds dated research readings, protocol corrections, and assessed engineering practice. It is no longer a PDF-only rebuild. Original source PDFs were not available in this checkout during this update; original chapter content is inherited, not newly certified against those PDFs.
+The original course structure follows the supplied 13-PDF sequence listed below. The 9 September 2026 edition adds dated research readings, protocol corrections, and assessed engineering practice. It is no longer a PDF-only rebuild. Original source PDFs were not available in this checkout during this update; the new textbook is not certified against those absent PDFs.
 
-Canonical content is `presentations/src/course-data.mjs`, with the dated additions in `presentations/src/course-update.mjs`. Each generated chapter lists its reading IDs, linked primary sources, dates, evidence type, and limitations. The corresponding deck includes those sources in speaker notes and an assessed-practice slide. See the [research update](improvements/RESEARCH-UPDATE.md) and [claim ledger](improvements/CLAIM-LEDGER.md) for the support checks.
+The current textbook's canonical content is authored in `chapters/*.md`, with front matter and appendices in `textbook/`. Its bibliography and source checks are in [references.json](textbook/references.json) and [SOURCE-CHECKS.md](textbook/SOURCE-CHECKS.md). The chapter sequence below is a topic mapping to the original course, not a claim that the new prose was transcribed from those PDFs.
+
+Presentation content remains in `presentations/src/course-data.mjs` and `course-update.mjs`. The decks and existing Word/PDF represent the earlier concise edition. Its Markdown and generator were archived in `textbook/archive/conspect-2026-09-09/`. The new build writes Markdown and LaTeX only, so lecture-slide rebuilding cannot overwrite the textbook. The original source-reference appendix is retained as historical reference material; the new textbook cites its own checked bibliography.
 
 | # | Supplied source | Rebuilt chapter | Improved deck |
 |---:|---|---|---|

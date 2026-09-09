@@ -1,0 +1,37 @@
+\chapter{Mathematical and experimental foundations}
+\section{Conditional probability}
+For events \(A\) and \(B\) with \(P(B)>0\), conditional probability is defined by \(P(A\mid B)=P(A\cap B)/P(B)\). It describes the probability of \(A\) when attention is restricted to outcomes in \(B\). Rewriting gives \(P(A\cap B)=P(A\mid B)P(B)\). Repeated application yields the sequence factorization used in Chapter 2.
+
+Conditional probability is not automatically a causal statement. If a model gives a different answer when a phrase is present, the observation describes a relationship under the tested conditions. A designed intervention that changes only that phrase provides stronger evidence about its effect in that setting. It still does not identify every internal step that produced the answer.
+
+Independence is a specific assumption: \(P(A\cap B)=P(A)P(B)\). Two model calls being executed separately does not establish independent errors. They may share task difficulty, model parameters, and misleading evidence. When a derivation assumes independence, ask what real-world mechanism could violate it.
+
+\section{Expected value and utility}
+For a finite set of outcomes with values \(u_i\) and probabilities \(p_i\), expected utility is \(\sum_i p_i u_i\). The probabilities sum to one. Expected utility is an average across possible outcomes, not the value guaranteed on a particular attempt.
+
+Suppose an invented assistant succeeds with probability 0.8 for value 10, fails harmlessly with probability 0.15 for value 0, and causes an unwanted effect with probability 0.05 for value -100. Its expected value is \(0.8(10)+0.15(0)+0.05(-100)=3\). A second assistant that succeeds only 0.7 of the time but otherwise fails harmlessly has expected value 7 under these assigned values. Higher answer success alone does not settle the decision.
+
+The values in this example are teaching assumptions. Real utility depends on stakeholder priorities and consequences, and some effects should be forbidden as constraints rather than traded against average benefit. The purpose of the calculation is to expose the assumptions behind an architectural preference.
+
+\section{Vectors and similarity}
+A vector is an ordered list of numbers. For \(q=(q_1,\ldots,q_d)\) and \(v=(v_1,\ldots,v_d)\), the dot product is \(q\cdot v=\sum_i q_i v_i\). The Euclidean norm is \(\lVert q\rVert=\sqrt{\sum_i q_i^2}\). These definitions produce the cosine formula in Chapter 6.
+
+For \(q=(1,0)\) and \(v=(1,1)\), the dot product is 1, the norms are 1 and \(\sqrt{2}\), and cosine similarity is \(1/\sqrt{2}\approx0.7071\). For \(v=(0,1)\), similarity is zero. These numbers describe geometry. Whether geometric closeness corresponds to task relevance depends on the representation and must be evaluated.
+
+\section{Complexity and resource bounds}
+Time complexity describes how work scales with input size under a computational model. Space complexity describes the associated storage. Scanning \(n\) records once is linear in \(n\). Sorting all records is typically \(O(n\log n)\) for comparison sorting. Selecting a small top-\(k\) set with a heap can take \(O(n\log k)\) time and \(O(k)\) additional space, excluding storage already occupied by the records.
+
+Asymptotic notation omits constants and practical service latency. For a notebook with ten records, a simple scan may be preferable to a complicated index. For a large corpus, index design matters. For an agent, model and network requests can dominate local computation, so count expensive operations as well as algorithmic steps.
+
+An input bound and a complexity bound answer different questions. A quadratic algorithm with a hard limit of twenty records may be acceptable. A linear algorithm processing an unbounded request body can still exhaust memory. Define the actual limits at parsing, execution, and output boundaries.
+
+\section{Confusion matrices}
+For a binary decision such as “allow this action,” define the positive class explicitly. If positive means an authorized action should be allowed, a true positive is a permitted action correctly allowed. A false positive is an unauthorized action allowed. A false negative is an authorized action denied. A true negative is an unauthorized action denied.
+
+Precision is the fraction of positive decisions that are correct; recall is the fraction of actual positives detected. In security writing, people sometimes reverse the positive class and treat attacks as positive. Neither convention is inherently wrong, but changing it without warning reverses the meaning of errors. Always state the class definition and preferably include raw counts.
+
+\section{A simple paired-results worksheet}
+For two systems A and B tested on the same cases, maintain four counts: both correct, only A correct, only B correct, and neither correct. Add separate records for infrastructure outcomes before deciding how they enter the primary metric. The observed difference in success proportions is \((n_{A\text{ only}}-n_{B\text{ only}})/n\) when every pair is included under the same scoring convention.
+
+A worksheet makes the result auditable without requiring an advanced statistical package. It does not by itself supply a confidence interval, account for clustered repetitions, or solve dataset selection bias. Those require a design appropriate to the study. For a small course experiment, honest limits are more informative than an unjustified significance claim.
+

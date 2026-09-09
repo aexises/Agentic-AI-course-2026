@@ -1,103 +1,83 @@
-# 02. The LLM as a Reasoning Engine
+# The language model as a reasoning component
 
-> Agents inherit the stochastic, token-based nature of LLMs; prompting, structured output, retrieval, and adaptation compensate for different limitations.
+## From text to conditional prediction
 
-## Learning objectives
+A language model operates on tokens: units produced by a tokenizer, which need not correspond to complete words. A name, identifier, or punctuation sequence may occupy several tokens. Tokenization matters because limits and usage are generally expressed in tokens, while users think in documents, sentences, or characters. Character counts are useful approximations for some local bounds, but they are not exact provider token counts.
 
-- Explain next-token prediction and sampling
-- Use major prompting strategies appropriately
-- Distinguish prompting, RAG, and fine-tuning
-- Design machine-readable outputs for control loops
+For a token sequence $x_1,\ldots,x_n$, the chain rule of probability gives:
 
-## Core notes
+$$
+p(x_1,\ldots,x_n)=\prod_{t=1}^{n}p(x_t\mid x_1,\ldots,x_{t-1}).
+$$
 
-### The engine predicts one token at a time
+An autoregressive language model approximates these conditional probabilities. During generation, previously supplied and generated tokens determine a distribution for the next token. This mathematical description explains why the complete input matters. Removing a policy passage changes the conditioning information; the model cannot be assumed to retain that passage from an earlier independent request unless the application or provider includes it again.
 
-An autoregressive LLM defines a probability distribution for the next token given previous tokens, samples one, appends it, and repeats. This makes agent behavior stochastic, gives the model no built-in persistent state, and represents plans, actions, and observations as tokens.
+Prediction is not the same as factual verification. A likely continuation can contain a false date, an invented identifier, or a plausible but invalid tool argument. The application must decide which outputs can be accepted directly and which need an external check.
 
-- Low temperature favors predictable control-loop behavior.
-- Top-p limits sampling to a probability-mass nucleus.
-- Input and output tokens both affect latency and cost.
+## A useful view of attention
 
-### The context window is a shared budget
+The Transformer introduced attention-based sequence processing [@transformer]. In a simplified attention operation, queries $Q$, keys $K$, and values $V$ are matrices derived from token representations. One attention head computes:
 
-System instructions, tool definitions, retrieved evidence, memory, conversation, and generated reasoning all compete for a fixed window. Agent loops resend a growing transcript, so relevance and compression matter.
+$$
+\operatorname{Attention}(Q,K,V)=\operatorname{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}\right)V.
+$$
 
-- Long contexts cost more and take longer.
-- Evidence in the middle may be underused.
-- The cheapest token is the one the system does not send.
+The dimension $d_k$ is the width of the key vectors. A query–key dot product supplies a compatibility score. Softmax converts a row of scores into nonnegative weights summing to one, and those weights combine value vectors. This is a compact account of one operation, not a complete description of a modern provider model. Positional information, masking, multiple heads, feed-forward layers, and many architectural choices affect the full computation.
 
-### The prompt programs behavior in context
+For the application designer, the relevant consequence is that context is processed through learned interactions. Including a sentence does not guarantee that the answer will use it correctly. Nor does an attention weight, by itself, establish a complete causal explanation for an answer. We therefore inspect task behavior through controlled inputs and external verification.
 
-In-context learning teaches a task through instructions and examples without changing model weights. A robust prompt separates instruction, context, input, and output indicator; an agent profile also includes tool contracts and the protocol the harness parses.
+## Sampling and repeatability
 
-- Zero-shot is fast but can be brittle on edge cases.
-- Few-shot demonstrations stabilize task pattern and format.
-- Clear output examples reduce parse failures.
+A model's raw output scores are often called logits. For positive temperature $\tau$, a common sampling distribution is:
 
-### Different reasoning techniques buy different guarantees
+$$
+p_i=\frac{\exp(z_i/\tau)}{\sum_j\exp(z_j/\tau)}.
+$$
 
-Chain-of-thought externalizes intermediate steps. Self-consistency samples several chains and votes. Program-aided language models generate code and delegate exact computation to an interpreter. Reasoning models spend additional test-time compute on difficult problems.
+Here $z_i$ is the logit for candidate token $i$. Lower temperature concentrates probability on higher-scoring candidates; higher temperature makes the distribution flatter. The mathematical expression applies for $\tau>0$. An API's zero-temperature behavior is a separate implementation convention, often associated with greedy selection. A low temperature is not a universal guarantee of identical outputs across hardware, model revisions, or provider execution paths.
 
-- Compare direct answers and reasoning prompts on the target task.
-- Test voting against a baseline with a declared call budget.
-- Use executable programs when exact computation matters.
-- Pay for deliberate reasoning only on hard steps.
+Top-$p$ sampling retains a high-probability set whose cumulative mass reaches a threshold, then samples within that set. Provider support and parameter interactions vary. For an experiment, record the actual supported settings rather than copy a sampling recipe between models. Changing temperature, prompt, tools, and model at once makes it impossible to identify which change produced an observed difference.
 
-### Structured output closes the software loop
+## Prompting as interface design
 
-Structured-output support varies by provider, model, and schema. Native function calling supplies a protocol for tool requests. The application must validate arguments, check policy, and handle invalid or incomplete responses.
+A prompt should establish the task, the available evidence, the required output, and what to do when evidence is insufficient. In the equipment service, “Be helpful” is under-specified. A more useful instruction says to select only catalog identifiers present in supplied records, state uncertainty about missing dates, and produce a reservation proposal without claiming that a booking has been committed.
 
-- Schema validity is not semantic correctness.
-- Tool descriptions steer selection and argument filling.
-- The model requests; application code executes.
+Examples can clarify the intended mapping from inputs to outputs. A positive example alone may teach the model to always produce an item. Include a missing-evidence example if abstention is part of the contract. Keep examples consistent: if one example treats tomorrow as a fixed date and another uses the runtime clock, the application has left an important rule ambiguous.
 
-### Prompting, retrieval, and fine-tuning solve different problems
+Separate instructions from source content structurally. Use explicit fields for the user's request, retrieved records, and output requirements. This improves inspectability, but formatting is not an authorization boundary. Retrieved text remains untrusted even when enclosed in a field labeled “evidence.” Chapter 12 explains why tools require separate enforcement.
 
-Prompting changes behavior quickly. RAG injects current or private knowledge at query time. Fine-tuning changes model behavior in weights; LoRA learns small low-rank adapters and QLoRA combines adapters with a quantized base. Alignment methods such as SFT, RLHF, and DPO target preferred behavior.
+## Reasoning, explanations, and calculation
 
-- Choose prompting for format, role, or rapidly changing behavior.
-- Choose RAG for fresh, private, or citable knowledge.
-- Choose fine-tuning for stable behavior at sufficient scale.
-- Ground hallucination; do not expect prompting alone to remove it.
+Chain-of-thought prompting uses intermediate reasoning examples to elicit multi-step answers; Wei and colleagues studied its effects on arithmetic, commonsense, and symbolic tasks [@cot]. PAL instead uses model-generated programs with an interpreter for the computation [@pal]. These are different ways to allocate work. Neither lets the application accept an unchecked final claim merely because intermediate material looks plausible.
 
-### Behavioral claims need an external check
+For an equipment fee, the model may extract “three days at 12 units per day” and request a calculator result. The calculator can establish that the product is 36. It cannot establish that the 12-unit rate is the applicable policy. Evidence selection and arithmetic verification are distinct responsibilities. A correct computation with a wrong input remains a wrong answer.
 
-CHIVE investigates model behavior by editing prompts and measuring the resulting responses. In this course, a plausible explanation is a hypothesis to test. Schema checks, factual checks, and policy checks answer different questions.
+A verbal explanation is also an output to evaluate. If a model says it chose a camera because of battery life, an experiment might remove the battery information while holding other evidence constant. A changed answer supports sensitivity to that intervention; an unchanged answer does not prove the model ignored battery life in every context. CHIVE studies counterfactual prompt changes as a way to evaluate explanations of behavior [@chive]. Our classroom use is limited to input/output experiments and does not claim access to the model's internal mechanism.
 
-- Predict the effect of one prompt edit.
-- Score the response with a stated criterion.
-- Distinguish measured behavior from a causal explanation.
+## Worked example: three different validation failures
 
-## Exam-ready summary
+Consider a required result with fields `item_id`, `available`, and `evidence_ids`. A response of `available: "yes"` violates a schema requiring a Boolean. A response with a valid Boolean and `item_id: "C999"` may satisfy the schema but fail catalog membership. A response containing a real identifier and a real evidence ID may still misinterpret a policy that applies only to staff.
 
-- An LLM is stochastic and stateless; the agent harness supplies control and state.
-- Prompt structure and examples are the cheapest adaptation lever.
-- Structured output and function calling make generations programmable.
-- Prompting, RAG, and fine-tuning are complements, not substitutes.
+The checks form a sequence. Parsing determines whether there is a syntactically usable object. Schema validation checks field names, types, and local constraints. Domain validation checks membership and policy rules. Evidence review asks whether the cited material supports the particular claim. These checks need different error messages and different repair strategies.
 
-## Self-test
+If parsing fails, asking for a correctly formatted object may be sensible. If evidence is missing, repeating the same formatting instruction will not help. The system should retrieve missing evidence, ask a question, or abstain. Distinguishing failure types prevents a generic retry loop from repeatedly solving the wrong problem.
 
-1. How do temperature and top-p affect an agent loop?
-2. What competes for space in the context window?
-3. Compare zero-shot, few-shot, chain-of-thought, self-consistency, and PAL.
-4. Why is valid JSON insufficient as a security guarantee?
-5. When should an engineer choose RAG rather than fine-tuning?
-6. Why can a valid schema and a plausible explanation still accompany a wrong answer?
+## Context, retrieval, and training
 
-## Assessed practice
+Prompting changes the information and instructions supplied at inference time. Retrieval supplies external records relevant to the current request. Fine-tuning updates model parameters using training examples. These interventions operate at different points in the system and can be combined.
 
-Keep a factual task fixed and add one misleading cue. Predict whether the answer will change. Record both conditions and identify which check tests structure, evidence, or policy.
+For frequently changing equipment availability, retrieval from the inventory service is the natural source of truth. Training a model to remember yesterday's inventory does not maintain today's bookings. For a stable output convention, examples or fine-tuning may improve adherence, but local validation remains necessary. Choosing among these approaches requires identifying whether the failure comes from missing knowledge, task interpretation, format adherence, or an unreliable downstream operation.
 
-**Acceptance check:** The submission contains paired inputs and a testable prediction. It does not treat verbal reasoning as ground truth.
+Structured output is helpful because software consumes objects more reliably than free prose. The supported schema features and behavior remain model- and provider-dependent; the accompanying labs use local validation even when requesting structured output. Consult the dated Gemini function-calling and compatibility references for the transport-specific details [@gemini-tools; @gemini-openai].
 
-**Lab:** labs/07_agents_sdk_evaluation.ipynb
+## Exercises
 
-## Reading and evidence
+1. Explain the difference between token probability and probability that a factual claim is correct. Give an example where a familiar phrase can be a false continuation.
+2. For logits $(0,\ln 3)$ at temperature 1, compute the two softmax probabilities. Repeat at temperature 2 and explain the change.
+3. A response cites a real policy ID but applies a staff rule to a student. Which checks pass and which fail? Propose the next action.
+4. Write two prompt examples for equipment selection: one successful case and one insufficient-evidence case. State which behavior each example teaches.
+5. Design a paired prompt experiment testing whether a misleading sentence changes an answer. Identify the outcome measure and two limits of the conclusion.
 
-- **P3** [Would this change your answer?](https://arxiv.org/abs/2608.16747). Anthropic/Fellows preprint, arXiv v1, 2026-08-17. CHIVE tests counterfactual prompt changes. Generated explanations remain hypotheses. Official post: August 21.
-- **S4** [Gemini structured outputs](https://ai.google.dev/gemini-api/docs/structured-output). Google documentation, accessed, 2026-09-09. Supported schemas constrain structure. Application validation must check meaning and policy.
+## Further study and laboratory connection
 
-## Source basis
-
-The original structure follows `02-llm-reasoning-engine.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.
+Read [@transformer] for the attention architecture and [@cot] for a historical reasoning intervention. Use [@chive] to distinguish explanatory hypotheses from behavioral tests. Lab 5 makes the model/calculator boundary explicit, and Lab 6 tests structured answers and evidence membership. Keep arithmetic correctness, source correctness, and semantic support separate in the lab report.

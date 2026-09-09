@@ -1,6 +1,6 @@
 # Instructor handoff
 
-Use the chapter's **Assessed practice** and **Reading and evidence** sections with its final presentation activity slide. The first six sections retain the original chapter progression; the seventh connects the concepts to an executable engineering check. Reading IDs resolve in `improvements/RESEARCH-UPDATE.md` and `improvements/CLAIM-LEDGER.md`. Research papers, engineering reports, and API specifications are explicitly different evidence types.
+Use the current textbook's **Exercises** and **Further study and laboratory connection** sections with the companion lecture slides. The textbook now develops each topic in continuous prose, with worked examples and selected answers. Its 35-reference bibliography is separate from the earlier P1–P3/R1–R3 reading IDs used in presentation notes. See [textbook instructions](../textbook/README.md) and [source checks](../textbook/SOURCE-CHECKS.md). Research papers, engineering reports, and API specifications remain distinct evidence types.
 
 Distribute repaired worked examples `labs/03_react_tools_repaired.ipynb` and `labs/04_corrective_rag_repaired.ipynb` before the four assessed Labs 5–8. They are course-local replacements for the audited reference examples; the original AAI[sum26] project has not been modified. The complete native Gemini model→tool→model exercise is Lab 5. The Lab 4 search adapter is tested with an injected client; it makes no live Tavily requests.
 

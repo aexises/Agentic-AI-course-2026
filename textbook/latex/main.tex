@@ -1,0 +1,47 @@
+\documentclass[11pt,oneside,openany]{book}
+\usepackage[a4paper,margin=28mm]{geometry}
+\usepackage{fontspec}
+\setmainfont{Latin Modern Roman}
+\setsansfont{Latin Modern Sans}
+\setmonofont{Latin Modern Mono}
+\usepackage{amsmath,amssymb}
+\usepackage{microtype}
+\usepackage{fvextra}
+\usepackage{xcolor}
+\usepackage{xurl}
+\usepackage[unicode,colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,urlcolor=blue!45!black]{hyperref}
+\hypersetup{pdftitle={Agentic AI: Principles, Systems, and Practice},pdfauthor={},pdfcreator={}}
+\setlength{\emergencystretch}{3em}
+\setcounter{tocdepth}{1}
+\title{Agentic AI\\[0.5em]\Large Principles, Systems, and Practice}
+\author{}
+\date{Source edition\\9 September 2026}
+\begin{document}
+\frontmatter
+\maketitle
+\tableofcontents
+\input{preface.tex}
+\mainmatter
+\input{chapters/01-introduction.tex}
+\input{chapters/02-llm-reasoning-engine.tex}
+\input{chapters/03-anatomy-react.tex}
+\input{chapters/04-design-patterns.tex}
+\input{chapters/05-tools-mcp.tex}
+\input{chapters/06-rag-agentic-rag.tex}
+\input{chapters/07-memory-context.tex}
+\input{chapters/08-multi-agent-systems.tex}
+\input{chapters/09-multi-agent-interop.tex}
+\input{chapters/10-reasoning-planning.tex}
+\input{chapters/11-evaluation-observability.tex}
+\input{chapters/12-safety-security.tex}
+\input{chapters/13-production-frontier.tex}
+\appendix
+\input{appendix-mathematics.tex}
+\input{appendix-case-study.tex}
+\input{selected-answers.tex}
+\backmatter
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{chapter}{Bibliography}
+\input{bibliography.tex}
+\end{document}

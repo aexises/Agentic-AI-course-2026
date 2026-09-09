@@ -1,106 +1,75 @@
-# 08. Multi-Agent Systems
+# Multi-agent systems and coordination
 
-> Multiple agents add specialization, modularity, parallelism, and context division only when coordination costs are explicitly designed.
+## Why add another agent?
 
-## Learning objectives
+The equipment service now handles an expedition requiring cameras, audio equipment, and portable power. A single bounded agent may still solve the task. Another design assigns each equipment category to a specialist and gives a coordinator responsibility for the final kit. The second design should earn its complexity by improving an identifiable outcome: coverage, latency, modularity, or isolation of responsibilities.
 
-- Decide when multiple agents help
-- Design roles, communication, and coordination
-- Compare centralized, decentralized, and hierarchical topologies
-- Bound multi-agent cost and termination
+An agent role is a bundle of instructions, context, tools, and authority. Merely changing the role name from “researcher” to “expert reviewer” does not create new evidence or independent knowledge. Two agents with the same model and the same incomplete documents may make the same mistake. Treat specialization as an implementation hypothesis to test.
 
-## Core notes
+Anthropic's 2026 multi-agent research post examines coordination, information aggregation, and incompatible objectives in controlled settings [@multiagent-report]. The useful lesson for the course is to inspect who has which information and what each participant is trying to achieve. The findings do not establish a universal rate of coordination failure in deployed systems.
 
-### More agents are useful only for separable work
+## Information partitioning
 
-A focused role, prompt, tool set, and context can outperform one overloaded agent. Multiple agents also allow modular testing, parallel tasks, and divided context. These gains disappear when work is tightly coupled or one well-equipped agent already succeeds.
+A worker needs enough context to solve its assigned subtask. It also needs the shared constraints that make its result compatible with other workers: date, trip duration, carrying capacity, budget, and eligibility assumptions. Omitting these constraints can produce individually plausible but jointly unusable results.
 
-- Specialization narrows behavior and tool choice.
-- Modularity makes agents independently replaceable.
-- Parallelism reduces time only for independent subtasks.
-- Context division keeps each working set relevant.
+For example, the camera worker chooses a high-quality body, the audio worker chooses a recorder, and the power worker chooses batteries. If the workers never exchange connector requirements, the final kit may not function. A coordinator must specify interface constraints or perform a compatibility check after receiving results.
 
-### Coordination is the price of specialization
+Information partitioning can reduce the amount each worker processes, but synthesis restores cross-cutting dependencies. A claim such as “all workers completed” is therefore weaker than “the combined plan satisfies the request.” The acceptance test must cover the composition, including conflicts and missing interfaces.
 
-Each agent adds model calls and communication. Errors can propagate through handoffs, disagreement needs resolution, and someone must decide when the team is done. Multi-agent designs are harder to trace and secure.
+## Communication topologies
 
-- Cost grows with agents, turns, and coordination rounds.
-- Messages consume context and can carry errors or injections.
-- Termination needs shared budgets and a clear owner.
-- Start with a single agent and add roles for measured reasons.
+A centralized design sends worker outputs to one coordinator. This provides a clear synthesis owner but makes the coordinator's context and workload important constraints. A peer-to-peer design allows direct exchange, which may be useful for negotiation but creates more possible communication paths. A hierarchy groups workers under intermediate coordinators, reducing some local complexity while adding layers where information can be lost.
 
-### Design collaboration along four dimensions
+The number of possible undirected pairwise links among $n$ participants is:
 
-Roles define responsibility; communication defines information exchange; coordination selects the next actor and completion rule; evolution determines whether agents adapt through feedback or reflection.
+$$
+\frac{n(n-1)}{2}.
+$$
 
-- Give roles distinct objectives and tool scopes.
-- Choose shared state or explicit messages deliberately.
-- Define handoff contracts and synthesis ownership.
-- Keep adaptation separate from uncontrolled drift.
+This follows by counting $n(n-1)$ ordered pairs and dividing by two because each undirected pair is counted twice. Six agents have fifteen possible pairwise links. A star with one central coordinator and five workers has five links. These are counts of possible links, not measurements of actual messages or runtime cost. Directed communication and broadcast semantics require a different accounting model.
 
-### A runtime supplies identity, lifecycle, and delivery
+Choose a topology based on dependencies and ownership. If workers only need common constraints and a final synthesis, a star may suffice. If two workers must negotiate a shared resource, either allow a specific exchange or make the coordinator own that decision. Fully connected communication should not be the default merely because it is possible.
 
-The application sits on a runtime that creates and retires agent instances, uniquely addresses them, and routes messages. Standalone runtimes are simpler; distributed runtimes add process, machine, language, isolation, and operations concerns.
+## Shared state and message passing
 
-- Use one process for development and simple applications.
-- Distribute only for scale, isolation, or polyglot requirements.
-- Persist state intentionally across instance lifecycles.
+Shared-state communication lets participants read and update a common structure. Message passing sends explicit records between participants. Shared state makes information accessible but creates conflict questions: who can overwrite a field, how concurrent updates combine, and whether a reader sees a consistent version. Messages make sender and recipient explicit but may be delayed, duplicated, or out of order in a distributed system.
 
-### Communication can be shared-state or message-based
+For the equipment case, workers can return append-only candidate records rather than overwrite a single `best_item` field. The coordinator then chooses a combination from a known set of proposals. This design avoids “last writer wins” accidentally deciding the result. If a shared field is necessary, define its owner and merge rule.
 
-A blackboard lets agents read and update common state. Direct messaging targets a specific agent. Publish-subscribe decouples publishers from subscribers through topics. Topic scope is also a security boundary.
+An output record should contain the subtask ID, assumptions, recommendation, source IDs, unresolved issues, and resource use. A long unstructured essay is hard to validate and expensive to pass to another model. Structured communication does not prove correctness, but it exposes fields that a validator and coordinator can inspect.
 
-- Shared state simplifies synthesis but can create coupling.
-- Direct messaging makes ownership explicit.
-- Pub-sub supports fan-out and looser coupling.
-- Partition topics by user, session, or tenant to prevent leakage.
+## Worked example: shared error versus complementary evidence
 
-### Topology determines control and failure shape
+Suppose three workers receive a copied handbook stating that students can borrow equipment for three days. All three recommend a three-day plan. Their agreement does not create three independent sources; it reflects one shared document. If the current policy allows five days, the team can agree confidently on an outdated answer.
 
-A centralized supervisor decomposes, routes, and synthesizes with clear accountability but becomes a bottleneck. Peer-to-peer systems remove the single boss but are harder to control. Hierarchies compose teams at scale while multiplying coordination layers.
+Now give one worker the current policy and require every recommendation to include source version and effective date. The coordinator can detect the disagreement and apply the institution's authority rule. The improvement comes from evidence diversity and conflict resolution, not from the number of voices alone.
 
-- Supervisors behave like LLM routers over shared state.
-- Peers need negotiation, consensus, and termination rules.
-- Hierarchies need bounded delegation at every level.
-- Measure handoffs, agent-specific failures, and total call budget.
+A useful classroom experiment compares a single agent with a team on paired inputs. In the clean condition, all receive the relevant current record. In the conflict condition, add an outdated but plausible statement. Keep task scope and budgets explicit. If the team receives more documents or twice as many requests, report that advantage rather than attribute the entire result to collaboration.
 
-### Shared evidence matters more than agreement
+## Objectives and resource conflicts
 
-Anthropic's multi-agent experiments include information-sharing failures and conflicting objectives. For a classroom comparison, keep task scope and budget explicit. Agreement between agents does not establish independent evidence.
+A camera worker instructed to maximize image quality may choose the heaviest kit. A logistics worker instructed to minimize weight may reject it. Neither participant is necessarily malfunctioning; their local objectives conflict. The system needs a common objective or an explicit negotiation rule.
 
-- Inspect which facts each role receives.
-- Test a misleading cue shared across agents.
-- Give one component responsibility for synthesis and termination.
+For the expedition, define hard constraints first: maximum weight, required battery duration, compatibility, and permitted loan period. Then define preferences among feasible kits, such as quality or convenience. A weighted score can help select among feasible proposals, but do not trade away a hard safety or authorization constraint by giving it a small penalty weight.
 
-## Exam-ready summary
+Shared resources create another conflict. Two workers may both reserve the last battery. Planning-level coordination can reduce this risk, but the inventory service must still enforce availability at commitment. A model conversation is not a database lock. The service is the authority on whether the shared resource can be allocated.
 
-- Use multiple agents for genuine specialization or parallelism.
-- A runtime provides identity, lifecycle, and messaging.
-- Communication and topology determine security and debugging complexity.
-- Every team needs an owner of synthesis, budget, and completion.
+## Cost, latency, and failure ownership
 
-## Self-test
+A team consumes the sum of worker requests plus coordination and synthesis requests. Parallelism may reduce wall-clock latency while increasing total work. Report both. A task that finishes faster at triple the request count presents a tradeoff, not an unconditional efficiency gain.
 
-1. List four benefits and four costs of multi-agent systems.
-2. What are the four dimensions of collaboration?
-3. Compare shared state, direct messaging, and publish-subscribe.
-4. When is a distributed runtime justified?
-5. Compare centralized, decentralized, and hierarchical topologies.
-6. Why can a team agree on an incorrect answer even when its members sample separately?
+Failure ownership should be explicit. If one worker times out, the coordinator must decide whether its result is essential. If a worker returns unsupported claims, the coordinator must reject or repair them. If the coordinator cannot reconcile a conflict, it should return a bounded unresolved outcome. Delegation does not remove responsibility for the final answer.
 
-## Assessed practice
+A practical design starts with one agent and adds a role only when its information, tools, or objective differ in a useful way. Keep a termination owner and a global budget. Local worker caps alone are insufficient if the coordinator can keep creating new workers.
 
-Complete Lab 7. Compare a single agent, an objective reviewer, and an optional model reviewer. Add one case where every role sees the same misleading cue.
+## Exercises
 
-**Acceptance check:** Report extra requests and shared errors. Explain any scope or information advantage before comparing outcomes.
+1. Compute the possible undirected pairwise links for eight agents and compare them with a star topology. Explain why this does not predict actual message count.
+2. Design an output schema for a power-supply worker. Include the fields needed to check compatibility with camera and audio recommendations.
+3. Explain why three agreeing workers using the same stale source do not constitute independent corroboration.
+4. Design a same-task single-agent/team experiment. Specify information allocation, budget accounting, failures, and the primary outcome.
+5. A worker maximizes quality while another minimizes weight. Separate hard constraints from preferences and define a valid synthesis procedure.
 
-**Lab:** labs/07_agents_sdk_evaluation.ipynb
+## Further study and laboratory connection
 
-## Reading and evidence
-
-- **R1** [Patterns and problems in emerging multiagent systems](https://www.anthropic.com/research/multiagent-systems). Anthropic research post, 2026-08-13. Controlled coordination experiments. Compare scope and budgets before interpreting the findings.
-- **S2** [OpenAI Agents SDK model integration](https://openai.github.io/openai-agents-python/models/). SDK documentation, accessed, 2026-09-09. The course uses local tools with a Gemini Chat Completions compatibility endpoint.
-
-## Source basis
-
-The original structure follows `08-multi-agent-systems.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.
+Use [@multiagent-report] as a research reading about coordination conditions. In Lab 7, compare a single agent, objective review, and optional model review. A useful negative result is that the additional role did not improve the measured outcome. Support that result with records of all attempts and all extra work.

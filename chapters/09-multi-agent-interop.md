@@ -1,103 +1,71 @@
-# 09. Multi-Agent Interoperability
+# Interoperability and delegated work
 
-> A2A treats agents as discoverable services with long-running task lifecycles, while MCP connects each agent to tools and data.
+## The problem across application boundaries
 
-## Learning objectives
+So far, all components could run inside one equipment application. Now suppose the engineering department owns the camera catalog and the media department owns audio equipment. Each department has its own service, authentication, and operating policies. A coordinating application must discover what the remote service can do, submit a bounded request, observe progress, and validate the returned result.
 
-- Explain the agent interoperability problem
-- Describe Agent Cards and A2A task objects
-- Separate MCP and A2A responsibilities
-- Threat-model cross-agent delegation
+A plain function call hides many of these concerns because the caller and callee share a runtime. Across a network, the callee can accept a task and continue working after the initial request returns. The caller may lose its connection, retry, or cancel. The remote service may ask for more information. Interoperability therefore requires a task lifecycle as well as a payload schema.
 
-## Core notes
+This chapter uses A2A version 1.0.0 as a dated protocol reference. The specification defines a task/message model and bindings including JSON-RPC, gRPC, and HTTP/REST [@a2a]. We trace the JSON-RPC-over-HTTP arrangement as a teaching choice. The lifecycle below is explanatory; it is not a substitute for the versioned wire schema.
 
-### Agent ecosystems recreate the integration problem one layer up
+## Discovery and capability descriptions
 
-Real agents use different frameworks, vendors, organizations, endpoints, and security domains. Bespoke pairwise integrations do not scale. An interoperable agent must publish capabilities and accept work without exposing its internal reasoning implementation.
+Before delegating, the caller needs to know the service identity, endpoint, supported capabilities, and authentication requirements. A2A uses Agent Cards to describe relevant service information [@a2a]. A capability advertisement helps a caller discover an interface, but it does not establish that the service is authorized for the user's data or competent on the requested task.
 
-- An agent resembles a service with discovery, endpoint, and authentication.
-- Unlike a simple API, it reasons and may run for minutes or days.
-- The protocol must cover status, streaming, and artifacts.
+For our service, a remote media catalog might advertise equipment recommendations and availability checks. The caller should distinguish these from booking commitment. An appealing description such as “full service equipment assistant” is not a precise grant of authority. Check the declared operation, the credential scope, and the local delegation policy.
 
-### A2A 1.0.0 separates operations from bindings
+Discovery itself is a trust boundary. A malicious or stale service description can point to an unintended endpoint. The application should have an approved discovery process, verify the service identity, and avoid treating arbitrary text in a card as instructions to expand access. The exact authentication mechanism depends on the deployment; the book does not prescribe one credential format for every system.
 
-A2A 1.0.0 defines a task and message model with JSON-RPC, gRPC, and HTTP/REST bindings. This course traces JSON-RPC over HTTP. Select a binding and version explicitly when implementing discovery, streaming, and authentication.
+## Messages, tasks, and artifacts
 
-- This course uses the JSON-RPC binding over HTTP.
-- Other defined bindings include gRPC and HTTP/REST.
-- The JSON-RPC streaming path uses server-sent events.
-- The application authenticates and authorizes each caller.
+A message carries content exchanged during the interaction. A task gives the work a stable identity and lifecycle. An artifact is a produced result, such as a candidate list or a reservation proposal. Keeping these concepts separate prevents a progress message from being mistaken for a completed deliverable.
 
-### Agent Cards make capabilities discoverable
+Suppose the media department replies, “Searching the archive.” That is progress, not an answer. A later result may list two microphones and the evidence supporting their suitability. The coordinating application should accept that result only after checking the task status and the artifact contract. Receiving a syntactically valid document is not the same as completing the delegated objective.
 
-An Agent Card is a machine-readable manifest containing identity, provider, version, skills, endpoint, and authentication information. Clients can fetch a well-known URL, use a registry, or follow a referral.
+A simplified lifecycle can include submitted, working, waiting for input, completed, failed, and canceled states. The exact protocol vocabulary and allowed transitions must come from the selected specification [@a2a]. Application code should preserve distinctions among these outcomes rather than collapse every non-success into an empty list.
 
-- Discovery avoids hard-coding every remote capability.
-- Cards should be authenticated or signed before trust.
-- Capabilities should be described at agent-level granularity.
+## Worked example: a delegated availability check
 
-### Tasks organize long-running collaboration
+The coordinator creates a task asking the media service to find one recorder available on date D. The request includes the date, relevant eligibility constraints, and a read-only scope. It does not grant authority to commit a reservation. The remote service accepts the task and returns its task identifier.
 
-A task has a lifecycle such as submitted, working, waiting for input, completed, failed, or canceled. Messages contain parts such as text or files; artifacts are the produced deliverables. Streaming exposes progress without pretending the work is one synchronous call.
+The coordinator records that identifier and observes progress. The remote service then requests clarification because the use location affects the applicable policy. The coordinator can return the question to the user or resolve it from already authorized information. It should not invent a location to keep the task moving.
 
-- Messages carry conversation turns.
-- Parts carry multimodal content.
-- Artifacts carry completed outputs.
-- Lifecycle state enables pause, input, retry, and completion.
+After clarification, the service returns a recorder identifier, availability observation time, and source references. The coordinator checks that the date and location match the original request, that the artifact is complete, and that the result is not already stale under its freshness rule. It then constructs a combined proposal with the camera result from another service.
 
-### MCP and A2A form two different layers
+The user may cancel while the remote task is still working. Cancellation is a request and lifecycle event; it is not evidence that every remote effect has been undone. In this read-only example there should be no booking effect. For effectful delegation, the system needs explicit reconciliation and compensation semantics. Never infer rollback merely from a canceled status label.
 
-MCP connects an agent to schema-defined tools and data sources. A2A connects one autonomous, reasoning agent to another through a task lifecycle. A remote agent may itself use MCP servers to complete delegated work.
+## Authentication, authorization, and evidence
 
-- Use MCP for vertical integration with tools and data.
-- Use A2A for horizontal collaboration across agent boundaries.
-- Do not model a long-running autonomous service as a micro-tool.
+Authentication answers who is making a request or operating a service. Authorization answers what that identity is allowed to do in this context. Evidence validation answers whether the returned result supports the claim. These questions remain separate after adopting an interoperability protocol.
 
-### Delegation crosses trust and governance boundaries
+An authenticated remote service can still return an outdated policy. A valid user credential can still lack permission to reserve a particular item. A correctly authorized availability check can still fail due to a network error. Mixing these categories makes both logs and user-facing explanations misleading.
 
-Every cross-agent edge raises questions about identity, authorization, prompt injection, over-delegation, data retention, compliance, cost, and audit. Remote outputs must be handled as untrusted content even after authentication.
+Delegated authority should be no broader than necessary. A remote recommendation worker may need a project date and equipment constraints but not a complete student profile. A booking worker may need a specific approval record but not the power to change the approval. Record what information crosses the boundary and why the receiving component needs it.
 
-- Authenticate the agent and verify its card.
-- Scope delegated authority by task, spend, action, and time.
-- Confirm high-stakes actions with a human.
-- Log context leaving the organization and artifacts returning.
+## MCP and A2A together
 
-### Delegation needs a versioned contract
+MCP and A2A address different interaction surfaces. MCP can connect the local application to tools and data; A2A can describe delegated work between separately operated agent services. A remote service reached through A2A may itself use MCP tools. This composition does not make the boundaries disappear.
 
-This chapter uses A2A 1.0.0 and traces its JSON-RPC binding. The specification also defines gRPC and HTTP/REST bindings. Identity, permission, and the validity of a returned artifact remain separate checks.
+Trace one request across the layers. The coordinator submits a read-only recommendation task to a remote agent. The remote agent calls its local inventory tool. That tool accesses a database under the remote service's credentials. The returned artifact travels back to the coordinator. Each hop has a caller, credentials, data scope, and validation responsibility. The coordinator cannot assume the remote tool's access control matches its own merely because the final response uses a standard format.
 
-- Record the protocol version and selected binding.
-- Authenticate the caller before assigning authority.
-- Treat returned content as untrusted evidence.
+The practical design question is whether delegated autonomy is necessary. If the remote operation is a single bounded lookup, an ordinary service endpoint may be sufficient. A task-oriented protocol becomes useful when progress, clarification, artifacts, or extended lifecycle management are part of the contract.
 
-## Exam-ready summary
+## Timeouts, retries, and versioning
 
-- A2A standardizes discovery and long-running work between agents.
-- Agent Cards advertise identity, skills, endpoint, and authentication.
-- MCP serves tools and data; A2A serves agent collaboration.
-- Cross-agent trust requires authentication, least privilege, bounds, and audit.
+A timeout means the caller did not receive a timely result. It does not establish whether the remote task was created or completed. Retrying task creation without a deduplication strategy can create duplicate work. Retain the remote task identifier whenever available, and distinguish creating new work from querying the status of existing work.
 
-## Self-test
+Version both the protocol binding and the application artifact schema. A protocol-level message can be valid while its artifact lacks a field required by the receiving application. Backward compatibility should be tested with recorded payloads, including unknown optional fields, missing required fields, and unexpected terminal states.
 
-1. Why is an agent not equivalent to a simple REST endpoint?
-2. What information belongs in an Agent Card?
-3. Define task, message, part, and artifact.
-4. How does A2A support long-running work?
-5. Compare MCP and A2A with a concrete example.
-6. Which responsibilities remain in the application after it adopts an interoperability protocol?
+An operational contract should specify who owns timeouts, which results remain retrievable, how long task state persists, and what cancellation means. These are design and service-agreement choices. Do not assume that selecting a protocol automatically supplies the retention or recovery behavior the course application needs.
 
-## Assessed practice
+## Exercises
 
-Trace a delegated catalog task from discovery to completion. Identify the caller, authorization decision, timeout owner, and artifact validator. No remote service deployment is required.
+1. Distinguish a progress message, a task state, and a completed artifact for a remote equipment search.
+2. Write a delegated request that permits recommendation but forbids commitment. Identify the minimum information the remote worker needs.
+3. A task-creation request times out. Explain why blindly creating another task may be incorrect, and describe a reconciliation strategy.
+4. Explain why authenticating a remote service does not establish the semantic correctness of its policy answer.
+5. Draw the caller, credentials, and validation responsibility at every hop in a coordinator–remote-agent–inventory-tool interaction.
 
-**Acceptance check:** Use A2A 1.0.0 terminology and distinguish the chosen binding from the abstract task model. Explain what happens after a failed or canceled task.
+## Further study and laboratory connection
 
-**Lab:** labs/08_langgraph_approval_security.ipynb
-
-## Reading and evidence
-
-- **S6** [A2A specification 1.0.0](https://a2a-protocol.org/v1.0.0/specification/). Versioned protocol specification, accessed, 2026-09-09. Separates the data model from JSON-RPC, gRPC, and HTTP/REST bindings. The course traces JSON-RPC.
-
-## Source basis
-
-The original structure follows `09-multi-agent-interop.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.
+Consult [@a2a] for the exact 1.0.0 data model and selected binding, and [@mcp-spec] for the tool/data layer. This chapter's exercise is a protocol and trust-boundary design task; the supplied labs do not claim to deploy a remote A2A service. Use Lab 8's approval binding to explain which authorization properties must survive delegation.

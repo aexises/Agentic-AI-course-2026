@@ -1,0 +1,103 @@
+# Selected exercise answers
+
+These answers provide checks on method and interpretation. Design exercises can have other valid solutions if the assumptions and acceptance criteria are explicit. The implementation exercises should be assessed using their tests and traces, not a required model-generated sentence.
+
+## Chapter 1
+
+**Exercise 1.** A reading assistant may accept a topic, level, and available study time; return a bounded list with sources and prerequisite explanations; and have no enrollment permission. Correct non-answer outcomes include asking for the student's level and reporting that no verified source was found for a required topic. The contract should distinguish recommendations from institutional enrollment decisions.
+
+**Exercise 2.** The overall process is a workflow if application code chooses every transition. A language model extracting fields does not by itself make subsequent control model-directed. The extraction output still needs validation before the transaction runs.
+
+**Exercise 3.** Availability can change between read and commit. The commit service must validate current stock and the request's authorization within its consistency mechanism. A timestamp explains when a read occurred but does not reserve the item.
+
+## Chapter 2
+
+**Exercise 2.** At temperature 1, exponentiating the logits gives weights 1 and 3, so the probabilities are 0.25 and 0.75. At temperature 2, the weights are 1 and $\sqrt{3}$, giving approximately 0.3660 and 0.6340. The distribution becomes less concentrated on the higher logit. This calculation does not say which token is factually correct.
+
+**Exercise 3.** Parsing, schema, and citation-membership checks may all pass. The applicability or semantic-support check fails because a staff rule does not establish student eligibility. Retrieve the applicable rule, ask for missing status information, or abstain; formatting repair is not the relevant next action.
+
+**Exercise 5.** A defensible design keeps the task, model, evidence set, and scoring rule fixed while adding one misleading sentence. It randomizes condition order and retains every attempt. Limitations include small task coverage and the fact that an observed response change is not a complete internal causal explanation.
+
+## Chapter 3
+
+**Exercise 2.** One model request can return multiple tool calls. A request counter limits the number of model invocations, not the number of operations proposed within one response. A separate tool-call counter must enforce the application's operation budget before dispatch.
+
+**Exercise 3.** Suitable statuses include invalid response, valid unavailable result, infrastructure timeout, denied action, and completed result. Unavailable inventory can be an acceptable answer to a lookup task. The evaluation must define whether a timeout counts as service failure and must not remove it merely because no answer was produced.
+
+**Exercise 5.** A bounded loop can block forever inside one unbounded operation. Individual calls need deadlines or timeouts, and the controller needs an overall deadline. Cancellation must be implemented by the operation or execution environment; a counter cannot interrupt arbitrary blocking work.
+
+## Chapter 4
+
+**Exercise 2.** With interpretation 1, policy 6, inventory 3, and composition 1, serial latency is 11 seconds. If policy and inventory are independent after interpretation, ideal parallel latency is $1+\max(6,3)+1=8$ seconds. If inventory depends on policy output, that parallel estimate is invalid.
+
+**Exercise 4.** Counting only the two corrections omits the newly introduced error. On the affected cases, the net change is one additional correct answer, before considering overhead and any other outcome changes. Retain the full paired result table.
+
+## Chapter 5
+
+**Exercise 2.** Boolean and string inputs raise a type error. A huge integer is rejected by the range check. Infinity is out of range; NaN fails the finite check. Two operands at the positive limit are individually permitted but their sum exceeds the result limit. Opposite signed limits sum to zero and pass. These are checks of the function's received values; request-body limits remain a separate layer.
+
+**Exercise 3.** JSON validity describes structure, not authority. A syntactically correct request can name another user's reservation. Authorization should use identity supplied by the authenticated application session and inspect permission for the requested operation and object.
+
+**Exercise 4.** Evidence would include tests against the actual server and operating-system permissions, including attempted reads outside the resolved allowed path. The advertised root is metadata and is not sufficient evidence of enforcement.
+
+## Chapter 6
+
+**Exercise 1.** Precision at five is $3/5=0.6$. Recall at five is $3/6=0.5$. The relevance labels and relevant-set definition must be fixed for these calculations to be meaningful.
+
+**Exercise 3.** An answer can cite P4 while claiming a five-day loan when P4 states a three-day limit. A membership test sees a valid ID and passes. A semantic-support check must compare the claim, its scope, and the cited text.
+
+**Exercise 5.** State that the documents conflict and that the applicable rule cannot be established from the supplied metadata. Ask for an authoritative current policy or a coordinator decision before a policy-dependent effect. Do not infer authority from which document is longer or retrieved first.
+
+## Chapter 7
+
+**Exercise 2.** The remaining allowance is $8192-1024-1536=5632$ tokens under the simplified budget. This is an allocation calculation, not an exact statement of any provider's hidden token accounting.
+
+**Exercise 3.** A suitable record says the applicable policy requires training, training status is unresolved, and P4 is the source for the requirement. It must not store eligibility as true. Include the source version and the identity to which any eventual training record applies.
+
+**Exercise 4.** Two requests can both observe that an operation ID is absent, both create an effect, and only then attempt to store the ID. A transaction and uniqueness rule can prevent that local interleaving from creating two committed operations. A remote effect still requires a corresponding remote mechanism or reconciliation.
+
+## Chapter 8
+
+**Exercise 1.** Eight participants have $8\times7/2=28$ possible undirected pairwise links. A star has seven links. Actual message counts depend on rounds, protocol, and which links are used; they cannot be inferred from these counts alone.
+
+**Exercise 3.** The workers share an evidence source and therefore share a possible cause of error. Agreement repeats the same support rather than adding independent corroboration. Ask which sources and assumptions differ, and inspect the authority and freshness of the shared document.
+
+## Chapter 9
+
+**Exercise 1.** “Searching” is progress content. “Working” is a lifecycle state. A validated candidate list is an artifact. Completion requires the appropriate terminal state and an artifact satisfying the application's contract.
+
+**Exercise 3.** The remote service may have created the task before the response was lost. A retry can create duplicate work. Use a documented deduplication mechanism or recover/query the existing task by a stable identifier; preserve uncertainty if the service offers no reliable reconciliation path.
+
+**Exercise 4.** Authentication establishes identity under the chosen mechanism. It does not establish that a source is current, that a calculation is correct, or that the returned artifact satisfies the task. These require separate validation.
+
+## Chapter 10
+
+**Exercise 1.** The result is $3(0.6)^2(0.4)+(0.6)^3=0.648$. Real attempts can share errors, have more than two possible answers, or produce invalid outputs, so the binomial calculation is a conditional illustration rather than a model-performance estimate.
+
+**Exercise 2.** A full binary tree through depth five has $1+2+4+8+16+32=63$ nodes. The count omits how many model calls generate or evaluate a node, retries, tool work, and pruning behavior.
+
+**Exercise 4.** A grounded revision request names the incompatible item pair and catalog source. It permits changing the selected battery or camera while preserving the user date and authorization scope. Recheck compatibility, availability, weight, and any dependent proposal fields after revision.
+
+## Chapter 11
+
+**Exercise 1.** Success per attempt is $9/12=0.75$. Ten attempts completed with an answer, so success per completion is $9/10=0.9$. Report the two timeouts rather than letting the second ratio hide them.
+
+**Exercise 2.** Repetitions estimate variability on one task but do not expand task coverage. Ten different tasks explore more of the task distribution, though one attempt each may poorly estimate within-task variation. The appropriate design depends on the question and budget.
+
+**Exercise 5.** The fixture validates the SDK loop, counters, record structure, and scripted failure handling. It does not establish Gemini accuracy, authentication, quota availability, real latency, or generalization. Any started attempt missing a final record needs reconciliation using the journal.
+
+## Chapter 12
+
+**Exercise 2.** Record that the attacker redirected the model into a prohibited proposal, while the runtime prevented the unauthorized effect. Preserve both observations. A benign approved operation is needed to check that the policy does not simply deny all work.
+
+**Exercise 3.** Bind approval to the reviewer, authenticated subject, item, interval, quantity, and immutable proposal version or equivalent payload identity. Changes that alter the intended effect require a new matching approval. A global `approved` flag loses that relationship.
+
+**Exercise 5.** Training influences the distribution of outputs. Application permission is a rule about a particular identity, resource, action, and context. The training procedure does not know every current authorization fact of the deployed service.
+
+## Chapter 13
+
+**Exercise 1.** Cost per attempt is $12/40=0.3$ units. Cost per success is $12/30=0.4$ units. The ratios omit, among other things, error severity, latency, and whether the successful actions were authorized.
+
+**Exercise 2.** A public policy cache can include query interpretation, corpus version, locale, and output requirements, with invalidation when the governing policy changes. Inventory commitment requires current authoritative checks because concurrent bookings can invalidate a prior read.
+
+**Exercise 4.** Run local regression tests and the fixed evaluation dataset against the new configuration, then perform bounded live integration checks for the actual provider/model path. Compare failures and usage as well as success. Passing does not prove behavior on every unseen task or future provider revision; record the tested version and date.

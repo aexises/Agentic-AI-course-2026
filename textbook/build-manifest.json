@@ -1,0 +1,83 @@
+{
+  "edition": "2026-09-09-textbook",
+  "chapters": 13,
+  "chapter_words": 18358,
+  "instructional_words": 22323,
+  "references": 35,
+  "exercises": 65,
+  "latex_compiled": false,
+  "sources": [
+    {
+      "path": "textbook/preface.md",
+      "sha256": "74d96d1918e954fdb663b9c72b623ba1eb80c4b57d229f2d354c11afc70fb340"
+    },
+    {
+      "path": "chapters/01-introduction.md",
+      "sha256": "785fe8dc9dba4d31b4e602104097827189841f5b4eb0bb7e2f257ab419c5df66"
+    },
+    {
+      "path": "chapters/02-llm-reasoning-engine.md",
+      "sha256": "8a475e875d2125bb3835d2565d83aeab2176e2ef9e2b9f12bf1e1dbebb77f10f"
+    },
+    {
+      "path": "chapters/03-anatomy-react.md",
+      "sha256": "b1f2b67efb784e5930d81464f676ee606c56bd26d1da405d2e16d421386de668"
+    },
+    {
+      "path": "chapters/04-design-patterns.md",
+      "sha256": "e7e0007c1aaca2bfd881ea4287a918eb269ee694d3436a9c14013a42f370fec9"
+    },
+    {
+      "path": "chapters/05-tools-mcp.md",
+      "sha256": "cf073191dc4c0495006ffb55ba6b27ecb5b30c546acabdce640867e3a37746be"
+    },
+    {
+      "path": "chapters/06-rag-agentic-rag.md",
+      "sha256": "2cc7ae330548028c73c38a85ea45aa208d295a940f35dd3659362d40c165b08b"
+    },
+    {
+      "path": "chapters/07-memory-context.md",
+      "sha256": "33b8c892e7e91d76c8d2092991eb2d27321415a3904d6ae28b43f4674af36c57"
+    },
+    {
+      "path": "chapters/08-multi-agent-systems.md",
+      "sha256": "d882baf0a2222b22b5eb2db2f40cd8fcd9bb833aeae89b6dac0602d4f2d4791e"
+    },
+    {
+      "path": "chapters/09-multi-agent-interop.md",
+      "sha256": "39dc434ab36047ffe90aa76eb2ea13b52474065c2b0edf6f46086df524ec8c0d"
+    },
+    {
+      "path": "chapters/10-reasoning-planning.md",
+      "sha256": "e17324f6ce5b6c81804654803cecdb4216ead9f649720a3ee52efce2d8c0b50d"
+    },
+    {
+      "path": "chapters/11-evaluation-observability.md",
+      "sha256": "e7e6959ae57162e8c6b1cc1743a437ca653d511edd43489e366d0b98712353e4"
+    },
+    {
+      "path": "chapters/12-safety-security.md",
+      "sha256": "93d4d77008c6413e81c0e65d83dc51c7be84f3a73048206d9bf6c4b75a793ecc"
+    },
+    {
+      "path": "chapters/13-production-frontier.md",
+      "sha256": "5f3667277085830a88d51419733eeb8af2c1b9f6a6242bb54d45bff6c442cd0f"
+    },
+    {
+      "path": "textbook/appendix-mathematics.md",
+      "sha256": "692df0bd0b6b521d97e03a75ef3099e68ab96ea2f5a53c924f7e138585bc55ac"
+    },
+    {
+      "path": "textbook/appendix-case-study.md",
+      "sha256": "199c8324aaa68ea2e7fb19e66993c23ca2c0976f16e35073c6a2661f7053a55a"
+    },
+    {
+      "path": "textbook/selected-answers.md",
+      "sha256": "07b5702cce2373a2492c6ea8e7f9ceaed85e5361dd9ef261a491a13fd38a1c03"
+    },
+    {
+      "path": "textbook/references.json",
+      "sha256": "073c73dd6641aabeef3c69b914ac929139ba1c8293c9e98465bc68cab2774a2f"
+    }
+  ]
+}

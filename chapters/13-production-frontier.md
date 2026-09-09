@@ -1,106 +1,87 @@
-# 13. Production, Economics, and the Frontier
+# Operating, maintaining, and evaluating an agent service
 
-> Production success is determined by the versioned, observable, economical, and secure system around the model rather than a one-off demo.
+## From a successful run to a service
 
-## Learning objectives
+A notebook demonstration shows that a particular path can work. A service must handle valid inputs, malformed inputs, changing data, dependency outages, concurrent requests, and software updates. It also needs a maintainer who can explain failures and decide when to change or roll back the system.
 
-- Close the prototype-to-production gap
-- Engineer cost, latency, and reliability
-- Explain AgentOps and safe rollout
-- Connect current successes to open problems
+For the equipment service, the operating contract includes supported request types, maximum latency, data-access scope, approval requirements, and fallback behavior. It should state what the system does when inventory is unavailable or policy evidence conflicts. A silent fallback to an invented answer may improve apparent responsiveness while violating the task.
 
-## Core notes
+The deployable unit is the complete configuration: model, prompts, tools, schemas, retrieval corpus, graph, policy, and evaluation set. Updating one component can invalidate assumptions in another. A new policy document can change eligibility; a new schema can make a previously accepted model response invalid; a different model can alter tool-selection behavior.
 
-### A product must work repeatedly under constraints
+## Cost accounting
 
-A prototype needs one successful demonstration; a production service must work safely, reliably, economically, and at scale. Prompts, tools, models, retrieval, memory, policies, and evals become versioned system components.
+For requests with known token rates, a simplified inference cost is:
 
-- Reliability includes retries, timeouts, fallbacks, and idempotency.
-- Compliance and security join functional correctness.
-- The runtime, tools, and operating process need their own tests.
+$$
+C_{\text{model}}=\sum_{i=1}^{m}\left(r_{\text{in}}u_i+r_{\text{out}}v_i\right),
+$$
 
-### Cost and latency compound across agent steps
+where $m$ is the number of model requests, $u_i$ and $v_i$ are input and output token counts, and the rates are expressed per token. Actual billing can distinguish cached input, model variants, reasoning usage, tools, and other categories. Use the provider's current definitions and observed usage for a real budget; the equation is a teaching model, not a quoted price schedule.
 
-Agent loops make multiple model and tool calls, so per-token and per-call costs accumulate. Routing sends ordinary work to cheaper models and hard work to stronger reasoning models. Caching, smaller models, fine-tuning, and bounded loops reduce spend.
+Total service cost also includes retrieval, storage, orchestration, monitoring, and human review. A cheaper model request may cause more repair calls or more reviewer work. Compare cost per attempted task and cost per successful task. If failures are common, quoting only the cost of a successful trace hides wasted work.
 
-- Cache embeddings, retrievals, results, and prompt prefixes.
-- Parallelize independent steps.
-- Stream progress to reduce perceived latency.
-- Set token, step, time, and spend budgets.
+## Worked example: cost per success
 
-### AgentOps combines service operations with LLM-specific controls
+Suppose an invented experiment makes 100 attempts. The total measured resource cost is 20 units and 80 attempts succeed. Cost per attempt is 0.2 units; cost per success is $20/80=0.25$ units. A second design costs 18 units and succeeds on 60 attempts. Its cost per attempt is lower, but its cost per success is $18/60=0.3$ units.
 
-Production agents need traces, dashboards, alerts, prompt and model versioning, evaluation gates, guardrails, and human checkpoints in addition to normal service reliability patterns.
+The first design is more economical per successful outcome under these definitions. That does not settle the entire decision: latency, error severity, capacity, and user experience may differ. If one design makes unauthorized bookings, a favorable average cost does not make it acceptable.
 
-- Trace model, tool, retrieval, memory, and agent spans.
-- Monitor quality, cost, latency, error, and safety metrics.
-- Use circuit breakers and fallbacks for unstable dependencies.
-- Preserve reproducibility across silent model or tool changes.
+A hard request count bounds one source of work but is not a currency cap. Requests can have different input and output sizes. For an actual spending limit, combine request bounds, token limits, observed usage, and provider-side account controls where available. State which bounds are exact and which are estimates.
 
-### Rollout should be reversible
+## Latency and capacity
 
-Agents can ship as services, batch workers, or embedded assistants. Canary releases, feature flags, gradual traffic, evaluation gates, and rapid rollback reduce the impact of behavioral regressions.
+Latency is the time one user waits; throughput is the amount of work completed per unit time. Parallel branches can lower latency while increasing simultaneous demand. At high load, queues can dominate the service's response time even when individual tool calls are fast.
 
-- Test on representative and adversarial tasks before deployment.
-- Require approval for consequential actions.
-- Keep a human-owned escalation path.
-- Audit actions after deployment.
+Measure distributions rather than only means. A small number of very slow attempts can matter greatly to users. Report a suitable percentile alongside the median and failure rate, and state how timeouts are represented. Excluding timed-out attempts from latency summaries can make a struggling service look fast.
 
-### Execution-grounded domains reveal the clearest wins
+For a sequential agent loop, every extra model round adds waiting time. Before optimizing implementation details, inspect whether the round is necessary. Can a deterministic rule replace a model call? Can independent reads run together? Can a response be streamed while a later nonessential task continues? Each optimization must preserve the task contract and produce an honest status.
 
-Coding agents can inspect repositories, edit files, and run tests; their Agent-Computer Interface exposes compact actions and concise feedback. Computer-use agents generalize to GUIs through screenshots or accessibility trees but remain more brittle.
+## Caching and freshness
 
-- Interface design can matter as much as the base model.
-- Execution tests make coding outcomes verifiable.
-- Human review remains essential.
-- High benchmark scores do not guarantee open-world reliability.
+Caching reuses a prior result. It is useful when the result remains valid for the new request and caller. A cache key should include the inputs and relevant versions that determine validity. For a policy answer, that may include the document version. For a personalized result, it may include authorization scope or user identity where appropriate.
 
-### The frontier and the open problems advance together
+Inventory is dynamic. A cached availability observation may help browsing but cannot guarantee availability at commit time. The reservation service must revalidate. Likewise, a cached answer derived from private evidence must not be served to an unauthorized user simply because the question text matches.
 
-Reasoning models, longer autonomous horizons, computer use, multimodality, MCP, and A2A expand capability. Reliability over long horizons, evaluation leakage, prompt injection, cost, accountability, labor impact, and misuse remain unresolved constraints.
+A cache needs an invalidation rule or time-to-live grounded in the data's meaning. “Cache everything for an hour” is not a universal optimization. Measure hit rate and stale-result failures, and retain the evidence needed to explain why a cached result was considered valid.
 
-- Clear ownership is required for deployed agents.
-- Audit trails document what happened and why.
-- Economics differ from fixed-cost traditional software.
-- Launch only the least autonomous system that passes eval and safety gates.
+## Retries, circuit breakers, and reconciliation
 
-### A maintained system needs evidence and an owner
+A retry repeats work after a failure. Retry only when the failure category and operation semantics justify it. A malformed request should be corrected first. An authorization denial should remain denied. A transient read failure may merit a small bounded retry with delay. Retrying an effect requires idempotency or a reconciliation procedure.
 
-The scientific-computing field report motivates reference tests and stewardship. OpenAI's observational research post also warns that activity metrics need careful interpretation. The capstone therefore assesses validated outcomes and reproducibility.
+A circuit breaker temporarily stops calls to a dependency after a defined failure pattern, allowing the service to return a controlled unavailable status rather than repeatedly overload a failing component. Its thresholds and recovery behavior are operating choices that need testing. A fallback must preserve the meaning of the task: it may offer an unverified suggestion, but it must not label it as a confirmed reservation.
 
-- Test recovery and unexpected inputs.
-- Name the maintainer and escalation path.
-- Separate activity counts from demonstrated task success.
+Reconciliation compares the application's recorded state with the authoritative domain state after uncertainty. If a commit timed out, query by operation ID before creating another booking. If the service cannot determine whether the effect occurred, escalate that uncertainty rather than convert it to an ordinary “not booked” answer.
 
-## Exam-ready summary
+## Release gates and rollback
 
-- Production is disciplined engineering around the model.
-- Routing, caching, bounds, and parallelism control cost and latency.
-- AgentOps versions, evaluates, traces, guards, and rolls back the whole system.
-- Frontier capability does not remove reliability, security, or accountability limits.
+A release gate defines evidence required before exposing a change. Run regression cases, held-out tasks, negative tests, and provider integration checks appropriate to the changed component. Compare complete system versions rather than only a model name. A prompt update that fixes one case can change unrelated tool behavior.
 
-## Self-test
+A staged rollout limits exposure while gathering operational evidence. The application needs a way to select versions and return to a known configuration. Rollback of software does not undo external effects already committed; those need a separate operational response. Keep these two meanings of recovery distinct.
 
-1. What distinguishes an agent demo from a production product?
-2. Give four methods for reducing cost and four for reducing latency.
-3. What artifacts must be versioned for reproducibility?
-4. What does AgentOps add to ordinary service operations?
-5. Why are coding agents comparatively successful?
-6. What evidence and ownership must accompany a successful agent demonstration?
+Assign an owner for the corpus, tool contracts, approval policy, and evaluation set. If nobody owns policy freshness, adding better retrieval cannot solve stale evidence. If nobody maintains tests after a schema change, a green test run may validate an obsolete interface.
 
-## Assessed practice
+## What recent research can and cannot tell us
 
-Submit the capstone bundle: baseline, bounded agent, held-out evaluation, negative tests, and an operating note. Include a reproducible command and a maintenance owner.
+The exploratory scientific-computing field report describes projects where verification and stewardship matter alongside model assistance [@scientific-report]. OpenAI's observational research-acceleration post discusses activity measures and their interpretation [@acceleration-report]. These sources motivate careful outcome validation and maintenance ownership. They do not estimate a universal productivity gain for students or for the equipment service.
 
-**Acceptance check:** The reviewer can rerun the bundle in a fresh environment and trace each conclusion to saved evidence. Follow teaching/CAPSTONE.md for the rubric.
+The frontier is therefore a moving research question, not a list of capabilities to memorize. A new model or framework may change what is feasible, but the course's comparison method remains useful: define the task, identify the system boundary, measure complete attempts, inspect failures, and state what the evidence supports. Keep a dated reading log so later readers can distinguish a historical finding from a current interface claim.
 
-**Lab:** labs/08_langgraph_approval_security.ipynb
+## The capstone as an operating argument
 
-## Reading and evidence
+The capstone should demonstrate a bounded equipment-style service or another approved domain with the same engineering requirements. It needs a simpler baseline, evidence-backed answers, explicit limits, a checked approval path where effects are proposed, a recovery test, and a reproducible evaluation bundle. Offline operation must remain possible for the core assessment so a student's grade does not depend on a paid provider account.
 
-- **P2** [Scientific computing in the age of agentic AI](https://cdn.openai.com/pdf/scientific-computing-in-the-age-of-agentic-ai-an-exploratory-field-report.pdf). OpenAI-affiliated exploratory field report, 2026-07-28. Case studies motivate verification and maintenance ownership. They do not estimate a universal productivity effect.
-- **R3** [Research acceleration: The view inside OpenAI](https://openai.com/index/research-acceleration-view-inside-openai/). OpenAI observational research post, 2026-09-06. Activity metrics do not by themselves identify causal gains in research progress.
+The written report should explain why each framework is present. LangGraph makes the workflow and state transitions explicit. Gemini supplies model behavior through a configured interface. The OpenAI Agents SDK supplies an agent execution abstraction in the relevant lab path. None is an argument for adding unnecessary autonomy. A project that demonstrates that a simpler workflow is sufficient can be an excellent result.
 
-## Source basis
+Conclude with an operating note: who maintains the system, what signals trigger investigation, what happens when a dependency fails, and how results can be reproduced. This turns a working demonstration into a reviewable engineering claim.
 
-The original structure follows `13-production-frontier.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.
+## Exercises
+
+1. Forty attempts cost 12 teaching units and produce 30 successes. Compute cost per attempt and per success. State one important factor these ratios omit.
+2. Design a cache key and invalidation policy for a public loan-policy answer. Explain why the same policy is insufficient for inventory commitment.
+3. Specify which failures may be retried for a read operation and an effectful operation. Include the uncertain-commit case.
+4. Write a release gate for changing the model used in Lab 7. Which local and live checks are required, and what remains uncertain after they pass?
+5. Submit the capstone package and operating note. A reviewer must be able to trace every reported result to a saved attempt and rerun the offline path.
+
+## Further study and laboratory connection
+
+Use [@scientific-report; @acceleration-report] as evidence-quality readings. Follow the capstone and submission templates supplied with the course. The final assessment rewards functional correctness, negative-case and recovery tests, controlled evaluation, and reproducibility; it does not require a positive result for any vendor or architecture.
