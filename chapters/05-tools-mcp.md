@@ -44,12 +44,12 @@ Without a standard, every agent must be wired separately to every tool. The Mode
 - Resources expose read-only context.
 - Prompts expose reusable interaction templates.
 
-### MCP is bidirectional and transport-independent
+### MCP capabilities depend on the selected version
 
-Servers expose tools, resources, and prompts; clients can expose sampling, roots, and elicitation. The same protocol messages can flow over local stdio or remote Streamable HTTP sessions.
+For the MCP 2025-11-25 baseline, servers expose tools, resources, and prompts. Clients can support sampling, roots, and elicitation. This edition discusses stdio and Streamable HTTP and requires implementations to enforce access controls.
 
 - Sampling lets a server request host-model generation.
-- Roots communicate permitted filesystem scopes.
+- Roots advertise filesystem context. Implementations enforce access.
 - Elicitation asks the user for input during a task.
 - Transport choice changes deployment and trust assumptions.
 
@@ -61,6 +61,14 @@ Frameworks provide loops or state graphs, persistence, streaming, tool integrati
 - Crew-style systems emphasize role-based multi-agent work.
 - Understand prompts and boundaries before adding framework abstraction.
 - MCP standardizes tools; A2A standardizes agent-to-agent collaboration.
+
+### Tool interfaces and authority need separate checks
+
+The labs use Gemini native calls and the OpenAI Agents SDK compatibility path. They expose local functions with explicit input limits. MCP descriptions and roots convey context, while the host and server implementations enforce access.
+
+- Reject unknown names and extra arguments before execution.
+- Bound input size and arithmetic magnitude.
+- Check provider features rather than assuming parity.
 
 ## Exam-ready summary
 
@@ -76,8 +84,22 @@ Frameworks provide loops or state graphs, persistence, streaming, tool integrati
 3. Why must tool results be treated as untrusted?
 4. Explain the N-by-M problem and MCP's answer.
 5. List server-side and client-side MCP primitives.
-6. When is a framework preferable to a raw model API?
+6. Why does an advertised filesystem root still need implementation-level access controls?
+
+## Assessed practice
+
+Complete Lab 5's dispatch policy. For the MCP 2025-11-25 baseline, explain why a roots response cannot substitute for filesystem access controls.
+
+**Acceptance check:** Reject booleans in numeric fields, nonfinite values, and oversized input. Name the component that enforces each permission.
+
+**Lab:** labs/05_gemini_bounded_tools.ipynb
+
+## Reading and evidence
+
+- **S1** [Gemini function calling](https://ai.google.dev/gemini-api/docs/function-calling). Google documentation, accessed, 2026-09-09. Check model support and preserve complete model content when returning function responses.
+- **S2** [OpenAI Agents SDK model integration](https://openai.github.io/openai-agents-python/models/). SDK documentation, accessed, 2026-09-09. The course uses local tools with a Gemini Chat Completions compatibility endpoint.
+- **S5** [MCP roots specification 2025-11-25](https://modelcontextprotocol.io/specification/2025-11-25/client/roots). Versioned protocol specification, 2025-11-25. The course uses this historical protocol baseline. Implementations enforce access controls.
 
 ## Source basis
 
-This chapter reorganizes and explains material from `05-tools-mcp.pdf`. It adds study structure and design implications, but introduces no external factual sources.
+The original structure follows `05-tools-mcp.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.

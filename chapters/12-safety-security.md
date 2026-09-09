@@ -62,6 +62,14 @@ Bias and toxicity can originate in web-scale training data; alignment methods su
 - Apply safety controls across MCP servers and A2A delegation.
 - Include injection and disallowed-action cases in evaluation.
 
+### Security tests distinguish proposals from effects
+
+A malicious proposal and a successful unauthorized effect are different outcomes. GPT-Red motivates evaluating held-out attacks, while this course tests a small application policy. Passing these fixtures does not establish general prompt-injection robustness.
+
+- Bind approval to the exact proposed action.
+- Measure false rejection on benign requests.
+- Retain held-out adversarial cases.
+
 ## Exam-ready summary
 
 - Action moves safety enforcement into code and infrastructure.
@@ -76,8 +84,21 @@ Bias and toxicity can originate in web-scale training data; alignment methods su
 3. Compare direct and indirect prompt injection.
 4. What is excessive agency and how is it mitigated?
 5. Design a defense-in-depth stack for a tool-using agent.
-6. How should hallucination and toxic output be mitigated and tested?
+6. Why should a security report score model proposals and executed effects separately?
+
+## Assessed practice
+
+Complete Lab 8. Submit one valid request, one injection-shaped proposal, and one replay with changed arguments. Identify the trusted reviewer channel.
+
+**Acceptance check:** Rejected actions create no ledger entry. A retry with the same ID cannot duplicate the effect, and changed payload reuse fails.
+
+**Lab:** labs/08_langgraph_approval_security.ipynb
+
+## Reading and evidence
+
+- **P1** [GPT-Red: Automated Red Teaming via Self-Play at Scale](https://cdn.openai.com/pdf/gpt-red-automated-red-teaming-via-self-play-at-scale.pdf). OpenAI technical paper, 2026-07-15. Self-play and held-out adversarial evaluation. Classroom policy checks do not reproduce this training.
+- **S3** [LangGraph interrupts](https://docs.langchain.com/oss/python/langgraph/interrupts). LangChain documentation, accessed, 2026-09-09. Resume restarts the interrupted node. Put effects after approval and make replay safe.
 
 ## Source basis
 
-This chapter reorganizes and explains material from `12-safety-security.pdf`. It adds study structure and design implications, but introduces no external factual sources.
+The original structure follows `12-safety-security.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.

@@ -1,0 +1,88 @@
+{
+  "edition": "2026-09-09",
+  "chapters": 13,
+  "decks": 13,
+  "slides": 156,
+  "pdf_pages": 52,
+  "pdf_link_annotations": 21,
+  "notebooks_hash_verified": 10,
+  "pytest_passed": 78,
+  "visual_review": "All 52 PDF pages; all 13 deck contact sheets; research, practice, exam and identified correction slides at readable size. No clipping or overlaps observed.",
+  "live_api_run": false,
+  "student_pilot_run": false,
+  "artifacts": [
+    {
+      "path": "output/presentations/01-introduction.pptx",
+      "sha256": "9127c75d50d79a35253a0e8e37a228699d492c159453a5260db1f8b8c1c45b20",
+      "slides": 12
+    },
+    {
+      "path": "output/presentations/02-llm-reasoning-engine.pptx",
+      "sha256": "f42bb99f56374c60b307d7e01ca1c811503e874776ceead1307b0c94d6d33bec",
+      "slides": 12
+    },
+    {
+      "path": "output/presentations/03-anatomy-react.pptx",
+      "sha256": "85d3c8e47044e3c412d7d70a5d7d764a09f51183c62b9ec19e1276823e24e520",
+      "slides": 12
+    },
+    {
+      "path": "output/presentations/04-design-patterns.pptx",
+      "sha256": "a72526eb663aeeeaaedf9d26f876d555bd7d9c2ba820f963a7b612e9c484381a",
+      "slides": 12
+    },
+    {
+      "path": "output/presentations/05-tools-mcp.pptx",
+      "sha256": "afe78e169fd45a29b65ddfa11291bc5026951cd5c1a6b535ce63de376d6706b4",
+      "slides": 12
+    },
+    {
+      "path": "output/presentations/06-rag-agentic-rag.pptx",
+      "sha256": "d50dc6723194706692ebeb793b9db1a07e78f98cab5798968b4a0feed9f62fc7",
+      "slides": 12
+    },
+    {
+      "path": "output/presentations/07-memory-context.pptx",
+      "sha256": "251a05b65ace0784ee315878f6b013a9ced2a9daf42453f82a0b6a5d0404d228",
+      "slides": 12
+    },
+    {
+      "path": "output/presentations/08-multi-agent-systems.pptx",
+      "sha256": "ce4e92a67eb82aad8336b73c976d01868cc907eb832f4e22a151a4d953406c98",
+      "slides": 12
+    },
+    {
+      "path": "output/presentations/09-multi-agent-interop.pptx",
+      "sha256": "bfb9554e926fc70e6a46d542db0a2d3cfdd817eea40950d829f585222cd9ebf8",
+      "slides": 12
+    },
+    {
+      "path": "output/presentations/10-reasoning-planning.pptx",
+      "sha256": "4c6e859c9b7b9359bf8798b3f7ce927b84aebd72b0c6628e92498edb29e2f97b",
+      "slides": 12
+    },
+    {
+      "path": "output/presentations/11-evaluation-observability.pptx",
+      "sha256": "ad7b9bf40f15f8b156f7e6824b9111486afe60cb7feeef28acf31716c85d7900",
+      "slides": 12
+    },
+    {
+      "path": "output/presentations/12-safety-security.pptx",
+      "sha256": "d48a0979fe2d4898d6e6e1b4b25845d26f9ba926f788b7afab063c640d6e7d37",
+      "slides": 12
+    },
+    {
+      "path": "output/presentations/13-production-frontier.pptx",
+      "sha256": "2cd129aa8312162cd7690dcb53823747a553d15382226824001300a155162211",
+      "slides": 12
+    },
+    {
+      "path": "output/studybook/agentic-ai-studybook.pdf",
+      "sha256": "63f8d89a7ba48039b5aea0678516ad4f12152c9b546cbb99100b36a7e45888ee"
+    },
+    {
+      "path": "output/studybook/agentic-ai-studybook.docx",
+      "sha256": "dabc0cbf2c830f0b1bf0a66e1694c190136a76919e34b6e4cd39914ecc22e94d"
+    }
+  ]
+}

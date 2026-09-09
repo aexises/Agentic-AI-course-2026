@@ -64,6 +64,14 @@ Persistent data requires consent, minimization, retention limits, deletion, and 
 - Forgetting: expire stale or irrelevant items.
 - Security: prevent unauthorized access and malicious persistence.
 
+### Execution state and model context serve different purposes
+
+A checkpoint stores workflow state for resumption. A context policy chooses what the next model call can see. Test these mechanisms separately. OpenAI's harness experiment motivates recording context settings as part of the evaluated system.
+
+- Reopen a checkpoint before resuming approval.
+- Keep side effects after the approval boundary.
+- Compare context policies without changing the task set.
+
 ## Exam-ready summary
 
 - Memory is context plus external stores and policies.
@@ -78,8 +86,21 @@ Persistent data requires consent, minimization, retention limits, deletion, and 
 3. What are four ways to manage a full context window?
 4. When should an agent write a long-term memory?
 5. Why does a million-token context not eliminate memory architecture?
-6. How should memory be evaluated and governed?
+6. How can a workflow resume correctly while its next model call still lacks needed context?
+
+## Assessed practice
+
+Complete Lab 8's checkpoint test. As an extension, compare a fixed recent-history window with a structured task summary on the same lookup tasks.
+
+**Acceptance check:** Show the pending state before resume and one committed effect after a retry. Do not generalize a context-policy result across providers.
+
+**Lab:** labs/08_langgraph_approval_security.ipynb
+
+## Reading and evidence
+
+- **S3** [LangGraph interrupts](https://docs.langchain.com/oss/python/langgraph/interrupts). LangChain documentation, accessed, 2026-09-09. Resume restarts the interrupted node. Put effects after approval and make replay safe.
+- **R2** [How enabling two settings tripled our scores on the ARC-AGI-3 benchmark](https://openai.com/index/how-two-settings-tripled-our-arc-agi-3-scores/). OpenAI research post, 2026-07-29. A specific harness experiment. Its result does not estimate the effect of context changes in Gemini.
 
 ## Source basis
 
-This chapter reorganizes and explains material from `07-memory-context.pdf`. It adds study structure and design implications, but introduces no external factual sources.
+The original structure follows `07-memory-context.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.

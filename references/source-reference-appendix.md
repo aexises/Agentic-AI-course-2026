@@ -1,4 +1,7 @@
 # Source Reference Appendix
+
+The entries below are transcribed from the reference slides in the supplied PDFs. They are retained as the evidence base for the rewritten studybook and improved presentations. The dated research additions appear in each chapter and in improvements/RESEARCH-UPDATE.md. This appendix preserves the original source references.
+
 ## 01. From Language Models to Agents
 
 References (1/2)

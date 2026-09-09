@@ -1,6 +1,8 @@
 # Source Map
 
-The course was rebuilt one-to-one from the supplied PDF sequence. Each chapter and improved deck uses the matching PDF as its factual source; the combined studybook adds only organization, explanation, learning objectives, design implications, summaries, and self-test questions.
+The original course structure follows the supplied 13-PDF sequence listed below. The 9 September 2026 edition adds dated research readings, protocol corrections, and assessed engineering practice. It is no longer a PDF-only rebuild. Original source PDFs were not available in this checkout during this update; original chapter content is inherited, not newly certified against those PDFs.
+
+Canonical content is `presentations/src/course-data.mjs`, with the dated additions in `presentations/src/course-update.mjs`. Each generated chapter lists its reading IDs, linked primary sources, dates, evidence type, and limitations. The corresponding deck includes those sources in speaker notes and an assessed-practice slide. See the [research update](improvements/RESEARCH-UPDATE.md) and [claim ledger](improvements/CLAIM-LEDGER.md) for the support checks.
 
 | # | Supplied source | Rebuilt chapter | Improved deck |
 |---:|---|---|---|

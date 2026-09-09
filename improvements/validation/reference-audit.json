@@ -1,0 +1,40 @@
+[
+  {
+    "id": "R1",
+    "cell": 10,
+    "observed": "global",
+    "expected": "supplied",
+    "finding": "run_tool ignores supplied registry after membership check"
+  },
+  {
+    "id": "R2",
+    "cell": 14,
+    "finding": "manual function has one generate_content call; dispatch results are printed, not returned to model",
+    "method": "AST plus source inspection"
+  },
+  {
+    "id": "R3",
+    "cell": 8,
+    "finding": "passes API key as api_base_url; raw_content result produces empty list",
+    "observed_constructor_keys": [
+      "api_base_url"
+    ]
+  },
+  {
+    "id": "R4",
+    "cell": 8,
+    "finding": "if raw_context branch is reached, text becomes a string and append fails"
+  },
+  {
+    "id": "R5",
+    "cell": 10,
+    "finding": "run calls llm(messages) without the stop argument described in the prose",
+    "method": "AST plus source inspection"
+  },
+  {
+    "id": "R6",
+    "cell": 6,
+    "finding": "calculator allows exponentiation without explicit operand/exponent/expression-size limits",
+    "method": "source inspection only; no expensive expression executed"
+  }
+]

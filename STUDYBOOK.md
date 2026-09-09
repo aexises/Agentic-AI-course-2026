@@ -2,14 +2,14 @@
 
 From language models to reliable autonomous systems.
 
+This studybook develops agent architecture through implementation, evaluation, and operating decisions. The 2026-09-09 edition combines the original 13-chapter structure with dated research readings and assessed labs using Gemini, LangGraph, and the OpenAI Agents SDK. Each chapter states an observable acceptance check.
 
 ## How to use this studybook
 
-1. Read chapters 1-3 to establish the agent model and the ReAct loop.
-2. Use chapters 4-7 to learn architecture: patterns, tools, retrieval, and memory.
-3. Use chapters 8-10 for coordination and advanced reasoning.
-4. Use chapters 11-13 to learn evaluation, security, and production discipline.
-5. Answer each chapter's self-test without notes, then check the exam-ready summary.
+1. Follow the chapter sequence below; complete each assessed practice and self-test.
+2. Use repaired Labs 3-4 before the four assessed Labs 5-8; finish with teaching/CAPSTONE.md.
+3. Record failures as well as successes. Fixtures test code; live experiments test a configured system.
+4. Read research findings with their stated limitations.
 
 ## Course map
 
@@ -94,6 +94,14 @@ Start with a single call or fixed workflow and add model-directed decisions only
 - Bound long horizons because errors compound.
 - Treat the production agent as a stack: model, tools, state, orchestration, eval, and guardrails.
 
+### A baseline makes autonomy a testable choice
+
+Choose a small task with observable success before building an agent. Compare a fixed workflow with a model-directed loop on the same inputs. Treat the decision to add autonomy as an engineering hypothesis.
+
+- Write expected outputs before implementation.
+- Keep task inputs and resource limits comparable.
+- Retain the simpler design when it meets the requirements.
+
 ## Exam-ready summary
 
 - Agent = LLM reasoning core + tools + loop + memory.
@@ -108,11 +116,23 @@ Start with a single call or fixed workflow and add model-directed decisions only
 3. Compare chatbot, workflow, and agent by control flow and tool use.
 4. Name the four agent components and the responsibility of each.
 5. Why are typical LLM-agent environments difficult?
-6. Explain the principle of minimum sufficient autonomy.
+6. How would you test whether a fixed workflow is sufficient for a task?
+
+## Assessed practice
+
+Choose a catalog lookup or arithmetic task. Write six cases, including empty input and an unknown item. Define a pass condition and a call limit. Explain what dynamic decision, if any, needs a model.
+
+**Acceptance check:** Submit the cases and an architecture choice before running a model. Credit follows the evidence, including a decision to keep a fixed workflow.
+
+**Lab:** labs/05_gemini_bounded_tools.ipynb
+
+## Reading and evidence
+
+Use the classroom baseline and its explicit acceptance tests. This activity is a teaching design.
 
 ## Source basis
 
-This chapter reorganizes and explains material from `01-introduction.pdf`. It adds study structure and design implications, but introduces no external factual sources.
+The original structure follows `01-introduction.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.
 
 
 ---
@@ -158,14 +178,14 @@ In-context learning teaches a task through instructions and examples without cha
 
 Chain-of-thought externalizes intermediate steps. Self-consistency samples several chains and votes. Program-aided language models generate code and delegate exact computation to an interpreter. Reasoning models spend additional test-time compute on difficult problems.
 
-- Use a single chain for ordinary multi-step reasoning.
-- Use voting when a clear answer needs robustness.
+- Compare direct answers and reasoning prompts on the target task.
+- Test voting against a baseline with a declared call budget.
 - Use executable programs when exact computation matters.
 - Pay for deliberate reasoning only on hard steps.
 
 ### Structured output closes the software loop
 
-Free-form prose is difficult for a runtime to execute safely. Instructed JSON is brittle; constrained decoding enforces a grammar; native function calling produces provider-enforced structured calls. The runtime must still validate and authorize arguments.
+Structured-output support varies by provider, model, and schema. Native function calling supplies a protocol for tool requests. The application must validate arguments, check policy, and handle invalid or incomplete responses.
 
 - Schema validity is not semantic correctness.
 - Tool descriptions steer selection and argument filling.
@@ -179,6 +199,14 @@ Prompting changes behavior quickly. RAG injects current or private knowledge at 
 - Choose RAG for fresh, private, or citable knowledge.
 - Choose fine-tuning for stable behavior at sufficient scale.
 - Ground hallucination; do not expect prompting alone to remove it.
+
+### Behavioral claims need an external check
+
+CHIVE investigates model behavior by editing prompts and measuring the resulting responses. In this course, a plausible explanation is a hypothesis to test. Schema checks, factual checks, and policy checks answer different questions.
+
+- Predict the effect of one prompt edit.
+- Score the response with a stated criterion.
+- Distinguish measured behavior from a causal explanation.
 
 ## Exam-ready summary
 
@@ -194,11 +222,24 @@ Prompting changes behavior quickly. RAG injects current or private knowledge at 
 3. Compare zero-shot, few-shot, chain-of-thought, self-consistency, and PAL.
 4. Why is valid JSON insufficient as a security guarantee?
 5. When should an engineer choose RAG rather than fine-tuning?
-6. What do LoRA and QLoRA change about fine-tuning economics?
+6. Why can a valid schema and a plausible explanation still accompany a wrong answer?
+
+## Assessed practice
+
+Keep a factual task fixed and add one misleading cue. Predict whether the answer will change. Record both conditions and identify which check tests structure, evidence, or policy.
+
+**Acceptance check:** The submission contains paired inputs and a testable prediction. It does not treat verbal reasoning as ground truth.
+
+**Lab:** labs/07_agents_sdk_evaluation.ipynb
+
+## Reading and evidence
+
+- **P3** [Would this change your answer?](https://arxiv.org/abs/2608.16747). Anthropic/Fellows preprint, arXiv v1, 2026-08-17. CHIVE tests counterfactual prompt changes. Generated explanations remain hypotheses. Official post: August 21.
+- **S4** [Gemini structured outputs](https://ai.google.dev/gemini-api/docs/structured-output). Google documentation, accessed, 2026-09-09. Supported schemas constrain structure. Application validation must check meaning and policy.
 
 ## Source basis
 
-This chapter reorganizes and explains material from `02-llm-reasoning-engine.pdf`. It adds study structure and design implications, but introduces no external factual sources.
+The original structure follows `02-llm-reasoning-engine.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.
 
 
 ---
@@ -229,7 +270,7 @@ The system prompt defines role, objective, tool menu, output protocol, constrain
 
 Short-term memory is the running context; long-term memory is an external store read and written through tools. The transcript is the immediate state of ReAct because each next decision depends on prior actions and observations.
 
-- Short-term memory is automatic but bounded.
+- The application or provider must carry the bounded conversation state.
 - Long-term memory is scalable but requires explicit retrieval.
 - Only re-supplied information can influence the next model call.
 
@@ -245,7 +286,7 @@ Decomposition creates subgoals, reasoning chooses actions, reflection critiques 
 
 The model proposes a tool and arguments. The runtime parses or receives the structured call, validates types and policy, authorizes it, executes the tool, and appends the real result as an observation. The model must never fabricate the observation.
 
-- Use stop sequences in a text protocol.
+- Use supported stop sequences as format controls in text protocols.
 - Prefer native tool calling in production when available.
 - Sandbox, scope permissions, and confirm consequential actions.
 
@@ -267,25 +308,45 @@ Termination must include a final-answer condition plus hard step, token, cost, o
 - No backtracking means a bad line may persist.
 - Native schemas reduce format drift but not reasoning errors.
 
+### A complete tool cycle returns observed results
+
+A native tool request is only part of the protocol. After validation, the runtime returns each result with the matching call identity and continues the model exchange. Preserve the provider's complete response content and cap the loop.
+
+- Dispatch through the supplied tool registry.
+- Keep model rounds and tool calls as separate budgets.
+- Test empty responses and multiple calls.
+
 ## Exam-ready summary
 
 - The model proposes actions; the runtime validates and executes.
 - ReAct alternates Thought, Action, and real Observation.
-- Stop sequences and budgets are correctness features.
+- Validate the complete protocol and enforce runtime budgets.
 - Tracing reveals both outcome and trajectory failures.
 
 ## Self-test
 
 1. What belongs in a robust agent profile?
 2. Who produces each part of Thought-Action-Observation?
-3. Why is a stop sequence needed in text ReAct?
+3. What can a supported stop sequence prevent, and what must the runtime still check?
 4. Compare text parsing with native function calling.
 5. List the required termination conditions for a safe loop.
-6. Why does ReAct reduce hallucination yet remain myopic?
+6. Which state must survive the model, tool, and model round-trip?
+
+## Assessed practice
+
+Complete Lab 5. Demonstrate that the second model request contains the executed tool result and its matching ID. Replace the registry with a fake and prove that the replacement runs.
+
+**Acceptance check:** The offline round-trip and replacement-registry tests pass. A missing result or exhausted budget yields an explicit stop reason.
+
+**Lab:** labs/05_gemini_bounded_tools.ipynb
+
+## Reading and evidence
+
+- **S1** [Gemini function calling](https://ai.google.dev/gemini-api/docs/function-calling). Google documentation, accessed, 2026-09-09. Check model support and preserve complete model content when returning function responses.
 
 ## Source basis
 
-This chapter reorganizes and explains material from `03-anatomy-react.pdf`. It adds study structure and design implications, but introduces no external factual sources.
+The original structure follows `03-anatomy-react.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.
 
 
 ---
@@ -352,6 +413,14 @@ A router can select an agent, an orchestrator can dispatch ReAct workers, and an
 - Each additional model call increases cost and failure opportunity.
 - Use the simplest pattern whose control assumptions match the task.
 
+### An extra stage must justify its cost
+
+A reviewer or worker adds another opportunity to help and another opportunity to fail. Use identical cases to compare a baseline with the proposed composition. Count review and coordination calls when evaluating the whole system.
+
+- Use a fixed baseline before changing the architecture.
+- Score outcomes and failures with the same rules.
+- Account for overhead even when review leaves the answer unchanged.
+
 ## Exam-ready summary
 
 - Patterns connect augmented LLMs with different control structures.
@@ -366,11 +435,23 @@ A router can select an agent, an orchestrator can dispatch ReAct workers, and an
 3. Name the two forms of parallelization and their goals.
 4. Why do evaluator-optimizer loops need verifiable criteria?
 5. Give a valid composition of three patterns.
-6. List four common agentic anti-patterns.
+6. How can a reviewer increase cost without increasing correctness?
+
+## Assessed practice
+
+Compare a single catalog agent with an objective evidence check. Specify when an LLM reviewer would add information that the objective check lacks.
+
+**Acceptance check:** Include a case where review adds no value and one where it changes an incorrect proposal. Count all calls in the live variant.
+
+**Lab:** labs/07_agents_sdk_evaluation.ipynb
+
+## Reading and evidence
+
+- **R1** [Patterns and problems in emerging multiagent systems](https://www.anthropic.com/research/multiagent-systems). Anthropic research post, 2026-08-13. Controlled coordination experiments. Compare scope and budgets before interpreting the findings.
 
 ## Source basis
 
-This chapter reorganizes and explains material from `04-design-patterns.pdf`. It adds study structure and design implications, but introduces no external factual sources.
+The original structure follows `04-design-patterns.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.
 
 
 ---
@@ -421,12 +502,12 @@ Without a standard, every agent must be wired separately to every tool. The Mode
 - Resources expose read-only context.
 - Prompts expose reusable interaction templates.
 
-### MCP is bidirectional and transport-independent
+### MCP capabilities depend on the selected version
 
-Servers expose tools, resources, and prompts; clients can expose sampling, roots, and elicitation. The same protocol messages can flow over local stdio or remote Streamable HTTP sessions.
+For the MCP 2025-11-25 baseline, servers expose tools, resources, and prompts. Clients can support sampling, roots, and elicitation. This edition discusses stdio and Streamable HTTP and requires implementations to enforce access controls.
 
 - Sampling lets a server request host-model generation.
-- Roots communicate permitted filesystem scopes.
+- Roots advertise filesystem context. Implementations enforce access.
 - Elicitation asks the user for input during a task.
 - Transport choice changes deployment and trust assumptions.
 
@@ -438,6 +519,14 @@ Frameworks provide loops or state graphs, persistence, streaming, tool integrati
 - Crew-style systems emphasize role-based multi-agent work.
 - Understand prompts and boundaries before adding framework abstraction.
 - MCP standardizes tools; A2A standardizes agent-to-agent collaboration.
+
+### Tool interfaces and authority need separate checks
+
+The labs use Gemini native calls and the OpenAI Agents SDK compatibility path. They expose local functions with explicit input limits. MCP descriptions and roots convey context, while the host and server implementations enforce access.
+
+- Reject unknown names and extra arguments before execution.
+- Bound input size and arithmetic magnitude.
+- Check provider features rather than assuming parity.
 
 ## Exam-ready summary
 
@@ -453,11 +542,25 @@ Frameworks provide loops or state graphs, persistence, streaming, tool integrati
 3. Why must tool results be treated as untrusted?
 4. Explain the N-by-M problem and MCP's answer.
 5. List server-side and client-side MCP primitives.
-6. When is a framework preferable to a raw model API?
+6. Why does an advertised filesystem root still need implementation-level access controls?
+
+## Assessed practice
+
+Complete Lab 5's dispatch policy. For the MCP 2025-11-25 baseline, explain why a roots response cannot substitute for filesystem access controls.
+
+**Acceptance check:** Reject booleans in numeric fields, nonfinite values, and oversized input. Name the component that enforces each permission.
+
+**Lab:** labs/05_gemini_bounded_tools.ipynb
+
+## Reading and evidence
+
+- **S1** [Gemini function calling](https://ai.google.dev/gemini-api/docs/function-calling). Google documentation, accessed, 2026-09-09. Check model support and preserve complete model content when returning function responses.
+- **S2** [OpenAI Agents SDK model integration](https://openai.github.io/openai-agents-python/models/). SDK documentation, accessed, 2026-09-09. The course uses local tools with a Gemini Chat Completions compatibility endpoint.
+- **S5** [MCP roots specification 2025-11-25](https://modelcontextprotocol.io/specification/2025-11-25/client/roots). Versioned protocol specification, 2025-11-25. The course uses this historical protocol baseline. Implementations enforce access controls.
 
 ## Source basis
 
-This chapter reorganizes and explains material from `05-tools-mcp.pdf`. It adds study structure and design implications, but introduces no external factual sources.
+The original structure follows `05-tools-mcp.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.
 
 
 ---
@@ -526,6 +629,14 @@ Agentic RAG lets the model decide whether to retrieve, rewrite or decompose quer
 - Vector RAG finds semantically relevant text.
 - GraphRAG follows relationships at higher build cost.
 
+### Provenance and abstention make retrieval auditable
+
+Carry source IDs and text through every retrieval step. Check whether the evidence supports the answer separately from whether a citation ID exists. A bounded repair attempt should end in an answer or an explicit abstention.
+
+- Compare against static retrieval on the same questions.
+- Keep conflicting evidence visible.
+- Treat a rewrite as optional and measurable.
+
 ## Exam-ready summary
 
 - RAG provides fresh, private, and citable evidence.
@@ -540,11 +651,23 @@ Agentic RAG lets the model decide whether to retrieve, rewrite or decompose quer
 3. Why can top-k retrieval dilute an answer?
 4. Compare hybrid search, reranking, and query transformation.
 5. What is faithfulness and why is it important?
-6. When is GraphRAG preferable to vector RAG?
+6. What can a citation-membership test establish, and what remains untested?
+
+## Assessed practice
+
+Complete Lab 6 and add unknown, conflicting, and irrelevant records. Compare zero repair with one repair using a fixed question set.
+
+**Acceptance check:** Report retrieval hits, unsupported answers, abstentions, and attempts separately. A known citation ID alone does not count as grounded correctness.
+
+**Lab:** labs/06_langgraph_corrective_rag.ipynb
+
+## Reading and evidence
+
+- **S4** [Gemini structured outputs](https://ai.google.dev/gemini-api/docs/structured-output). Google documentation, accessed, 2026-09-09. Supported schemas constrain structure. Application validation must check meaning and policy.
 
 ## Source basis
 
-This chapter reorganizes and explains material from `06-rag-agentic-rag.pdf`. It adds study structure and design implications, but introduces no external factual sources.
+The original structure follows `06-rag-agentic-rag.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.
 
 
 ---
@@ -615,6 +738,14 @@ Persistent data requires consent, minimization, retention limits, deletion, and 
 - Forgetting: expire stale or irrelevant items.
 - Security: prevent unauthorized access and malicious persistence.
 
+### Execution state and model context serve different purposes
+
+A checkpoint stores workflow state for resumption. A context policy chooses what the next model call can see. Test these mechanisms separately. OpenAI's harness experiment motivates recording context settings as part of the evaluated system.
+
+- Reopen a checkpoint before resuming approval.
+- Keep side effects after the approval boundary.
+- Compare context policies without changing the task set.
+
 ## Exam-ready summary
 
 - Memory is context plus external stores and policies.
@@ -629,11 +760,24 @@ Persistent data requires consent, minimization, retention limits, deletion, and 
 3. What are four ways to manage a full context window?
 4. When should an agent write a long-term memory?
 5. Why does a million-token context not eliminate memory architecture?
-6. How should memory be evaluated and governed?
+6. How can a workflow resume correctly while its next model call still lacks needed context?
+
+## Assessed practice
+
+Complete Lab 8's checkpoint test. As an extension, compare a fixed recent-history window with a structured task summary on the same lookup tasks.
+
+**Acceptance check:** Show the pending state before resume and one committed effect after a retry. Do not generalize a context-policy result across providers.
+
+**Lab:** labs/08_langgraph_approval_security.ipynb
+
+## Reading and evidence
+
+- **S3** [LangGraph interrupts](https://docs.langchain.com/oss/python/langgraph/interrupts). LangChain documentation, accessed, 2026-09-09. Resume restarts the interrupted node. Put effects after approval and make replay safe.
+- **R2** [How enabling two settings tripled our scores on the ARC-AGI-3 benchmark](https://openai.com/index/how-two-settings-tripled-our-arc-agi-3-scores/). OpenAI research post, 2026-07-29. A specific harness experiment. Its result does not estimate the effect of context changes in Gemini.
 
 ## Source basis
 
-This chapter reorganizes and explains material from `07-memory-context.pdf`. It adds study structure and design implications, but introduces no external factual sources.
+The original structure follows `07-memory-context.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.
 
 
 ---
@@ -704,6 +848,14 @@ A centralized supervisor decomposes, routes, and synthesizes with clear accounta
 - Hierarchies need bounded delegation at every level.
 - Measure handoffs, agent-specific failures, and total call budget.
 
+### Shared evidence matters more than agreement
+
+Anthropic's multi-agent experiments include information-sharing failures and conflicting objectives. For a classroom comparison, keep task scope and budget explicit. Agreement between agents does not establish independent evidence.
+
+- Inspect which facts each role receives.
+- Test a misleading cue shared across agents.
+- Give one component responsibility for synthesis and termination.
+
 ## Exam-ready summary
 
 - Use multiple agents for genuine specialization or parallelism.
@@ -718,11 +870,24 @@ A centralized supervisor decomposes, routes, and synthesizes with clear accounta
 3. Compare shared state, direct messaging, and publish-subscribe.
 4. When is a distributed runtime justified?
 5. Compare centralized, decentralized, and hierarchical topologies.
-6. How does a supervisor pattern terminate safely?
+6. Why can a team agree on an incorrect answer even when its members sample separately?
+
+## Assessed practice
+
+Complete Lab 7. Compare a single agent, an objective reviewer, and an optional model reviewer. Add one case where every role sees the same misleading cue.
+
+**Acceptance check:** Report extra requests and shared errors. Explain any scope or information advantage before comparing outcomes.
+
+**Lab:** labs/07_agents_sdk_evaluation.ipynb
+
+## Reading and evidence
+
+- **R1** [Patterns and problems in emerging multiagent systems](https://www.anthropic.com/research/multiagent-systems). Anthropic research post, 2026-08-13. Controlled coordination experiments. Compare scope and budgets before interpreting the findings.
+- **S2** [OpenAI Agents SDK model integration](https://openai.github.io/openai-agents-python/models/). SDK documentation, accessed, 2026-09-09. The course uses local tools with a Gemini Chat Completions compatibility endpoint.
 
 ## Source basis
 
-This chapter reorganizes and explains material from `08-multi-agent-systems.pdf`. It adds study structure and design implications, but introduces no external factual sources.
+The original structure follows `08-multi-agent-systems.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.
 
 
 ---
@@ -748,14 +913,14 @@ Real agents use different frameworks, vendors, organizations, endpoints, and sec
 - Unlike a simple API, it reasons and may run for minutes or days.
 - The protocol must cover status, streaming, and artifacts.
 
-### A2A builds agent collaboration on web standards
+### A2A 1.0.0 separates operations from bindings
 
-The Agent-to-Agent protocol uses HTTP, JSON-RPC, server-sent events, and standard authentication. Its design supports natural agentic interaction, secure enterprise use, long-running tasks, and multiple modalities.
+A2A 1.0.0 defines a task and message model with JSON-RPC, gRPC, and HTTP/REST bindings. This course traces JSON-RPC over HTTP. Select a binding and version explicitly when implementing discovery, streaming, and authentication.
 
-- HTTP provides transport.
-- JSON-RPC structures requests and responses.
-- SSE streams task updates.
-- Standard authentication lowers integration friction.
+- This course uses the JSON-RPC binding over HTTP.
+- Other defined bindings include gRPC and HTTP/REST.
+- The JSON-RPC streaming path uses server-sent events.
+- The application authenticates and authorizes each caller.
 
 ### Agent Cards make capabilities discoverable
 
@@ -791,6 +956,14 @@ Every cross-agent edge raises questions about identity, authorization, prompt in
 - Confirm high-stakes actions with a human.
 - Log context leaving the organization and artifacts returning.
 
+### Delegation needs a versioned contract
+
+This chapter uses A2A 1.0.0 and traces its JSON-RPC binding. The specification also defines gRPC and HTTP/REST bindings. Identity, permission, and the validity of a returned artifact remain separate checks.
+
+- Record the protocol version and selected binding.
+- Authenticate the caller before assigning authority.
+- Treat returned content as untrusted evidence.
+
 ## Exam-ready summary
 
 - A2A standardizes discovery and long-running work between agents.
@@ -805,11 +978,23 @@ Every cross-agent edge raises questions about identity, authorization, prompt in
 3. Define task, message, part, and artifact.
 4. How does A2A support long-running work?
 5. Compare MCP and A2A with a concrete example.
-6. Threat-model a delegated task across organizations.
+6. Which responsibilities remain in the application after it adopts an interoperability protocol?
+
+## Assessed practice
+
+Trace a delegated catalog task from discovery to completion. Identify the caller, authorization decision, timeout owner, and artifact validator. No remote service deployment is required.
+
+**Acceptance check:** Use A2A 1.0.0 terminology and distinguish the chosen binding from the abstract task model. Explain what happens after a failed or canceled task.
+
+**Lab:** labs/08_langgraph_approval_security.ipynb
+
+## Reading and evidence
+
+- **S6** [A2A specification 1.0.0](https://a2a-protocol.org/v1.0.0/specification/). Versioned protocol specification, accessed, 2026-09-09. Separates the data model from JSON-RPC, gRPC, and HTTP/REST bindings. The course traces JSON-RPC.
 
 ## Source basis
 
-This chapter reorganizes and explains material from `09-multi-agent-interop.pdf`. It adds study structure and design implications, but introduces no external factual sources.
+The original structure follows `09-multi-agent-interop.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.
 
 
 ---
@@ -831,17 +1016,17 @@ This chapter reorganizes and explains material from `09-multi-agent-interop.pdf`
 
 Chain-of-thought provides one linear path. It can make intermediate work inspectable, but a greedy chain has no exploration or recovery and its verbalized explanation is not guaranteed to be a faithful record of internal computation.
 
-- Use a single chain for ordinary multi-step tasks.
+- Compare a direct baseline with explicit reasoning on the task.
 - Verify outputs externally where possible.
 - Do not treat stated reasoning as ground truth.
 
 ### Self-consistency widens exploration by sampling
 
-Generate several independent reasoning chains and take the majority answer. Different correct paths may converge on the same result while wrong paths are less likely to converge on one specific error.
+Self-consistency samples multiple reasoning paths and aggregates their answers. Separately sampled outputs may share systematic errors. Measure whether voting improves the target task under a declared budget.
 
 - Cost grows roughly with the number of samples.
 - Voting requires an answer that can be aggregated.
-- Independence and diversity are part of the value.
+- Measure shared errors rather than assuming independence.
 
 ### Tree- and Graph-of-Thoughts add explicit search
 
@@ -878,6 +1063,14 @@ RL-trained reasoning models generate extended internal deliberation and spend te
 - Beyond a point, additional compute may reduce accuracy.
 - Escalate selectively instead of using maximum reasoning everywhere.
 
+### Reasoning strategies require controlled comparisons
+
+Compare a direct baseline with sampling or review under a declared resource budget. Separate samples can share systematic errors. Counterfactual prompt edits test a behavioral claim without establishing a complete account of internal computation.
+
+- Choose a scorer before inspecting answers.
+- Keep held-out cases out of prompt development.
+- Report when extra reasoning fails to help.
+
 ## Exam-ready summary
 
 - Self-consistency samples; search branches; reflection revises.
@@ -892,11 +1085,24 @@ RL-trained reasoning models generate extended internal deliberation and spend te
 3. How does Graph-of-Thoughts extend a tree?
 4. Compare reflection with search.
 5. When should an agent use ReAct, plan-and-execute, or parallel planning?
-6. Why can more reasoning hurt?
+6. What evidence would justify spending more inference on a reasoning strategy?
+
+## Assessed practice
+
+Use Lab 7's paired inputs to test a prediction about a misleading cue. Propose an equal-budget comparison with voting and identify a shared-error failure case.
+
+**Acceptance check:** Keep predictions, observations, and interpretations separate. State the limits of a small experiment.
+
+**Lab:** labs/07_agents_sdk_evaluation.ipynb
+
+## Reading and evidence
+
+- **P3** [Would this change your answer?](https://arxiv.org/abs/2608.16747). Anthropic/Fellows preprint, arXiv v1, 2026-08-17. CHIVE tests counterfactual prompt changes. Generated explanations remain hypotheses. Official post: August 21.
+- **R1** [Patterns and problems in emerging multiagent systems](https://www.anthropic.com/research/multiagent-systems). Anthropic research post, 2026-08-13. Controlled coordination experiments. Compare scope and budgets before interpreting the findings.
 
 ## Source basis
 
-This chapter reorganizes and explains material from `10-reasoning-planning.pdf`. It adds study structure and design implications, but introduces no external factual sources.
+The original structure follows `10-reasoning-planning.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.
 
 
 ---
@@ -965,6 +1171,14 @@ A run trace is a tree of spans for model calls, tools, retrieval, and agents. Ea
 - Run the same set on prompt, model, tool, or dependency changes.
 - Alert on quality, latency, cost, and safety drift.
 
+### A run manifest makes comparisons reviewable
+
+Record the complete setup and every attempted run. A completed answer can be wrong, and an infrastructure failure is a different outcome. Fixed cases and explicit denominators make a comparison inspectable.
+
+- Store model ID, prompt hash, and dependency versions.
+- Record attempted and completed runs separately.
+- Keep outcome scoring separate from resource use.
+
 ## Exam-ready summary
 
 - Evaluation is continuous system steering, not a final phase.
@@ -979,11 +1193,24 @@ A run trace is a tree of spans for model calls, tools, retrieval, and agents. Ea
 3. What makes execution-based evaluation strong?
 4. How can benchmark contamination and weak tests mislead?
 5. What biases affect LLM-as-judge?
-6. What should a trace span record, and how does eval-in-CI use it?
+6. How should an evaluation distinguish a wrong answer from an API failure?
+
+## Assessed practice
+
+Run the offline evaluation command, inspect its JSONL records, and test the failure path. For live inference, predeclare a model and budget before using the held-out split.
+
+**Acceptance check:** A fresh rerun produces a manifest and one record per attempted case. Interrupted or failed requests do not disappear from the denominator.
+
+**Lab:** labs/07_agents_sdk_evaluation.ipynb
+
+## Reading and evidence
+
+- **P3** [Would this change your answer?](https://arxiv.org/abs/2608.16747). Anthropic/Fellows preprint, arXiv v1, 2026-08-17. CHIVE tests counterfactual prompt changes. Generated explanations remain hypotheses. Official post: August 21.
+- **R2** [How enabling two settings tripled our scores on the ARC-AGI-3 benchmark](https://openai.com/index/how-two-settings-tripled-our-arc-agi-3-scores/). OpenAI research post, 2026-07-29. A specific harness experiment. Its result does not estimate the effect of context changes in Gemini.
 
 ## Source basis
 
-This chapter reorganizes and explains material from `11-evaluation-observability.pdf`. It adds study structure and design implications, but introduces no external factual sources.
+The original structure follows `11-evaluation-observability.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.
 
 
 ---
@@ -1052,6 +1279,14 @@ Bias and toxicity can originate in web-scale training data; alignment methods su
 - Apply safety controls across MCP servers and A2A delegation.
 - Include injection and disallowed-action cases in evaluation.
 
+### Security tests distinguish proposals from effects
+
+A malicious proposal and a successful unauthorized effect are different outcomes. GPT-Red motivates evaluating held-out attacks, while this course tests a small application policy. Passing these fixtures does not establish general prompt-injection robustness.
+
+- Bind approval to the exact proposed action.
+- Measure false rejection on benign requests.
+- Retain held-out adversarial cases.
+
 ## Exam-ready summary
 
 - Action moves safety enforcement into code and infrastructure.
@@ -1066,11 +1301,24 @@ Bias and toxicity can originate in web-scale training data; alignment methods su
 3. Compare direct and indirect prompt injection.
 4. What is excessive agency and how is it mitigated?
 5. Design a defense-in-depth stack for a tool-using agent.
-6. How should hallucination and toxic output be mitigated and tested?
+6. Why should a security report score model proposals and executed effects separately?
+
+## Assessed practice
+
+Complete Lab 8. Submit one valid request, one injection-shaped proposal, and one replay with changed arguments. Identify the trusted reviewer channel.
+
+**Acceptance check:** Rejected actions create no ledger entry. A retry with the same ID cannot duplicate the effect, and changed payload reuse fails.
+
+**Lab:** labs/08_langgraph_approval_security.ipynb
+
+## Reading and evidence
+
+- **P1** [GPT-Red: Automated Red Teaming via Self-Play at Scale](https://cdn.openai.com/pdf/gpt-red-automated-red-teaming-via-self-play-at-scale.pdf). OpenAI technical paper, 2026-07-15. Self-play and held-out adversarial evaluation. Classroom policy checks do not reproduce this training.
+- **S3** [LangGraph interrupts](https://docs.langchain.com/oss/python/langgraph/interrupts). LangChain documentation, accessed, 2026-09-09. Resume restarts the interrupted node. Put effects after approval and make replay safe.
 
 ## Source basis
 
-This chapter reorganizes and explains material from `12-safety-security.pdf`. It adds study structure and design implications, but introduces no external factual sources.
+The original structure follows `12-safety-security.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.
 
 
 ---
@@ -1094,7 +1342,7 @@ A prototype needs one successful demonstration; a production service must work s
 
 - Reliability includes retries, timeouts, fallbacks, and idempotency.
 - Compliance and security join functional correctness.
-- Most engineering effort surrounds the model.
+- The runtime, tools, and operating process need their own tests.
 
 ### Cost and latency compound across agent steps
 
@@ -1141,6 +1389,14 @@ Reasoning models, longer autonomous horizons, computer use, multimodality, MCP, 
 - Economics differ from fixed-cost traditional software.
 - Launch only the least autonomous system that passes eval and safety gates.
 
+### A maintained system needs evidence and an owner
+
+The scientific-computing field report motivates reference tests and stewardship. OpenAI's observational research post also warns that activity metrics need careful interpretation. The capstone therefore assesses validated outcomes and reproducibility.
+
+- Test recovery and unexpected inputs.
+- Name the maintainer and escalation path.
+- Separate activity counts from demonstrated task success.
+
 ## Exam-ready summary
 
 - Production is disciplined engineering around the model.
@@ -1155,11 +1411,24 @@ Reasoning models, longer autonomous horizons, computer use, multimodality, MCP, 
 3. What artifacts must be versioned for reproducibility?
 4. What does AgentOps add to ordinary service operations?
 5. Why are coding agents comparatively successful?
-6. Create a production launch checklist for an autonomous agent.
+6. What evidence and ownership must accompany a successful agent demonstration?
+
+## Assessed practice
+
+Submit the capstone bundle: baseline, bounded agent, held-out evaluation, negative tests, and an operating note. Include a reproducible command and a maintenance owner.
+
+**Acceptance check:** The reviewer can rerun the bundle in a fresh environment and trace each conclusion to saved evidence. Follow teaching/CAPSTONE.md for the rubric.
+
+**Lab:** labs/08_langgraph_approval_security.ipynb
+
+## Reading and evidence
+
+- **P2** [Scientific computing in the age of agentic AI](https://cdn.openai.com/pdf/scientific-computing-in-the-age-of-agentic-ai-an-exploratory-field-report.pdf). OpenAI-affiliated exploratory field report, 2026-07-28. Case studies motivate verification and maintenance ownership. They do not estimate a universal productivity effect.
+- **R3** [Research acceleration: The view inside OpenAI](https://openai.com/index/research-acceleration-view-inside-openai/). OpenAI observational research post, 2026-09-06. Activity metrics do not by themselves identify causal gains in research progress.
 
 ## Source basis
 
-This chapter reorganizes and explains material from `13-production-frontier.pdf`. It adds study structure and design implications, but introduces no external factual sources.
+The original structure follows `13-production-frontier.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.
 
 
 ---
@@ -1196,6 +1465,8 @@ This chapter reorganizes and explains material from `13-production-frontier.pdf`
 - Version prompts, tools, models, policies, data, and evals.
 
 ## Practice method
+
+For a coding assessment, submit the input cases, expected results, versioned setup, and observed failures. Compare a simpler baseline before adding autonomy. Distinguish a malformed response, a wrong answer, an API failure, and a denied action. The capstone rubric appears in teaching/CAPSTONE.md.
 
 For every architecture question, answer in four passes: define the components, trace control flow, identify failure modes, then state evaluation and safety controls. This mirrors how the source course develops each topic and prevents answers that describe capability without engineering discipline.
 

@@ -5,7 +5,7 @@ import { Presentation, PresentationFile } from "@oai/artifact-tool";
 import { course } from "./course-data.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const outDir = path.join(root, "output", "presentations");
+const outDir = path.join(root, "tmp", "course-update", "drafts");
 const renderRoot = path.join(root, "tmp", "deck-build", "renders");
 const pad = (n) => String(n).padStart(2, "0");
 
@@ -87,7 +87,7 @@ function addChrome(slide, chapter, slideNumber, sectionLabel = "AGENTIC AI") {
 
 function setNotes(slide, chapter, note) {
   slide.speakerNotes.textFrame.setText(
-    `${note}\n\n[Sources]\n- Supplied source presentation: ${chapter.source}`,
+    `${note}\n\nEdition: ${course.edition}\n\n[Sources]\n- Original source presentation: ${chapter.source}\n${chapter.readings.map(r => `- ${r.id}: ${r.title}. ${r.kind}, ${r.date}. ${r.url} ${r.note}`).join("\n")}\n\n[Assessed practice]\n${chapter.activity.task}\nAcceptance: ${chapter.activity.acceptance}\nLab: ${chapter.activity.lab}`,
   );
   slide.speakerNotes.setVisible(true);
 }
@@ -315,6 +315,20 @@ function addClosingSlide(presentation, chapter, slideNumber) {
   return slide;
 }
 
+function addPracticeSlide(presentation, chapter, slideNumber) {
+  const slide=presentation.slides.add();
+  slide.background.fill=palette.white;
+  addChrome(slide,chapter,slideNumber,"PRACTICE AND READING");
+  addText(slide,"practice-title","Evidence to submit",{left:41,top:105,width:1170,height:70},{fontSize:40,bold:true});
+  addText(slide,"practice-task",chapter.activity.task,{left:41,top:210,width:1150,height:130},{fontSize:26});
+  addText(slide,"practice-check",chapter.activity.acceptance,{left:41,top:355,width:1150,height:115},{fontSize:24,color:palette.muted});
+  const reading=chapter.readings.map(r=>`${r.id}  ${r.title}`).join("\n");
+  addText(slide,"practice-readings",reading || "Reading: classroom baseline and acceptance tests",{left:41,top:490,width:1150,height:105},{fontSize:19});
+  addText(slide,"practice-lab",chapter.activity.lab,{left:41,top:615,width:1150,height:28},{fontSize:17,color:palette.muted});
+  setNotes(slide,chapter,"Assess the submitted evidence with the stated acceptance check. Reading links and limitations follow.");
+  return slide;
+}
+
 async function writeBlob(filePath, blob) {
   await fs.writeFile(filePath, new Uint8Array(await blob.arrayBuffer()));
 }
@@ -335,6 +349,7 @@ async function buildChapter(chapter) {
   });
   addExamSlide(presentation, chapter, chapter.sections.length + 3);
   addClosingSlide(presentation, chapter, chapter.sections.length + 4);
+  addPracticeSlide(presentation, chapter, chapter.sections.length + 5);
 
   const deckName = `${pad(chapter.id)}-${chapter.slug}.pptx`;
   const deckPath = path.join(outDir, deckName);
@@ -342,6 +357,8 @@ async function buildChapter(chapter) {
   await fs.mkdir(renderDir, { recursive: true });
 
   for (const [index, slide] of presentation.slides.items.entries()) {
+    const layout = await slide.export({format:"layout"});
+    await fs.writeFile(path.join(renderDir, `slide-${pad(index+1)}.layout.json`), await layout.text());
     const png = await presentation.export({ slide, format: "png", scale: 1 });
     await writeBlob(path.join(renderDir, `slide-${pad(index + 1)}.png`), png);
   }

@@ -15,17 +15,17 @@
 
 Chain-of-thought provides one linear path. It can make intermediate work inspectable, but a greedy chain has no exploration or recovery and its verbalized explanation is not guaranteed to be a faithful record of internal computation.
 
-- Use a single chain for ordinary multi-step tasks.
+- Compare a direct baseline with explicit reasoning on the task.
 - Verify outputs externally where possible.
 - Do not treat stated reasoning as ground truth.
 
 ### Self-consistency widens exploration by sampling
 
-Generate several independent reasoning chains and take the majority answer. Different correct paths may converge on the same result while wrong paths are less likely to converge on one specific error.
+Self-consistency samples multiple reasoning paths and aggregates their answers. Separately sampled outputs may share systematic errors. Measure whether voting improves the target task under a declared budget.
 
 - Cost grows roughly with the number of samples.
 - Voting requires an answer that can be aggregated.
-- Independence and diversity are part of the value.
+- Measure shared errors rather than assuming independence.
 
 ### Tree- and Graph-of-Thoughts add explicit search
 
@@ -62,6 +62,14 @@ RL-trained reasoning models generate extended internal deliberation and spend te
 - Beyond a point, additional compute may reduce accuracy.
 - Escalate selectively instead of using maximum reasoning everywhere.
 
+### Reasoning strategies require controlled comparisons
+
+Compare a direct baseline with sampling or review under a declared resource budget. Separate samples can share systematic errors. Counterfactual prompt edits test a behavioral claim without establishing a complete account of internal computation.
+
+- Choose a scorer before inspecting answers.
+- Keep held-out cases out of prompt development.
+- Report when extra reasoning fails to help.
+
 ## Exam-ready summary
 
 - Self-consistency samples; search branches; reflection revises.
@@ -76,8 +84,21 @@ RL-trained reasoning models generate extended internal deliberation and spend te
 3. How does Graph-of-Thoughts extend a tree?
 4. Compare reflection with search.
 5. When should an agent use ReAct, plan-and-execute, or parallel planning?
-6. Why can more reasoning hurt?
+6. What evidence would justify spending more inference on a reasoning strategy?
+
+## Assessed practice
+
+Use Lab 7's paired inputs to test a prediction about a misleading cue. Propose an equal-budget comparison with voting and identify a shared-error failure case.
+
+**Acceptance check:** Keep predictions, observations, and interpretations separate. State the limits of a small experiment.
+
+**Lab:** labs/07_agents_sdk_evaluation.ipynb
+
+## Reading and evidence
+
+- **P3** [Would this change your answer?](https://arxiv.org/abs/2608.16747). Anthropic/Fellows preprint, arXiv v1, 2026-08-17. CHIVE tests counterfactual prompt changes. Generated explanations remain hypotheses. Official post: August 21.
+- **R1** [Patterns and problems in emerging multiagent systems](https://www.anthropic.com/research/multiagent-systems). Anthropic research post, 2026-08-13. Controlled coordination experiments. Compare scope and budgets before interpreting the findings.
 
 ## Source basis
 
-This chapter reorganizes and explains material from `10-reasoning-planning.pdf`. It adds study structure and design implications, but introduces no external factual sources.
+The original structure follows `10-reasoning-planning.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.

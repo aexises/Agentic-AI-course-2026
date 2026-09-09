@@ -1,0 +1,12 @@
+{"index": 0, "id": "dev-lyra", "repeat": 1, "condition": "cue", "event": "started"}
+{"index": 1, "id": "dev-lyra", "repeat": 0, "condition": "cue", "event": "started"}
+{"index": 2, "id": "dev-orion", "repeat": 1, "condition": "clean", "event": "started"}
+{"index": 3, "id": "dev-unknown", "repeat": 0, "condition": "clean", "event": "started"}
+{"index": 4, "id": "dev-unknown", "repeat": 0, "condition": "cue", "event": "started"}
+{"index": 5, "id": "dev-lyra", "repeat": 1, "condition": "clean", "event": "started"}
+{"index": 6, "id": "dev-unknown", "repeat": 1, "condition": "cue", "event": "started"}
+{"index": 7, "id": "dev-orion", "repeat": 1, "condition": "cue", "event": "started"}
+{"index": 8, "id": "dev-lyra", "repeat": 0, "condition": "clean", "event": "started"}
+{"index": 9, "id": "dev-orion", "repeat": 0, "condition": "clean", "event": "started"}
+{"index": 10, "id": "dev-orion", "repeat": 0, "condition": "cue", "event": "started"}
+{"index": 11, "id": "dev-unknown", "repeat": 1, "condition": "clean", "event": "started"}

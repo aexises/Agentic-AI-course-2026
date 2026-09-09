@@ -60,6 +60,14 @@ A router can select an agent, an orchestrator can dispatch ReAct workers, and an
 - Each additional model call increases cost and failure opportunity.
 - Use the simplest pattern whose control assumptions match the task.
 
+### An extra stage must justify its cost
+
+A reviewer or worker adds another opportunity to help and another opportunity to fail. Use identical cases to compare a baseline with the proposed composition. Count review and coordination calls when evaluating the whole system.
+
+- Use a fixed baseline before changing the architecture.
+- Score outcomes and failures with the same rules.
+- Account for overhead even when review leaves the answer unchanged.
+
 ## Exam-ready summary
 
 - Patterns connect augmented LLMs with different control structures.
@@ -74,8 +82,20 @@ A router can select an agent, an orchestrator can dispatch ReAct workers, and an
 3. Name the two forms of parallelization and their goals.
 4. Why do evaluator-optimizer loops need verifiable criteria?
 5. Give a valid composition of three patterns.
-6. List four common agentic anti-patterns.
+6. How can a reviewer increase cost without increasing correctness?
+
+## Assessed practice
+
+Compare a single catalog agent with an objective evidence check. Specify when an LLM reviewer would add information that the objective check lacks.
+
+**Acceptance check:** Include a case where review adds no value and one where it changes an incorrect proposal. Count all calls in the live variant.
+
+**Lab:** labs/07_agents_sdk_evaluation.ipynb
+
+## Reading and evidence
+
+- **R1** [Patterns and problems in emerging multiagent systems](https://www.anthropic.com/research/multiagent-systems). Anthropic research post, 2026-08-13. Controlled coordination experiments. Compare scope and budgets before interpreting the findings.
 
 ## Source basis
 
-This chapter reorganizes and explains material from `04-design-patterns.pdf`. It adds study structure and design implications, but introduces no external factual sources.
+The original structure follows `04-design-patterns.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.

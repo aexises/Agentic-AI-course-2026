@@ -1,0 +1,22 @@
+{
+  "mode": "fixture",
+  "model": "fixture-v1",
+  "dataset_sha256": "4e44dd8f24213013b73e75b92f8cc587eed7dfd66fcd78529516435b187d0be6",
+  "split": "heldout",
+  "created_utc": "2026-09-09T17:31:48.394503+00:00",
+  "prompt_sha256": "beed92f0f600eb597bb6c81a08fcf0b123a81ef4bb4ba4875be5a3a1134e5b8b",
+  "python": "3.12.14",
+  "packages": {
+    "openai-agents": "0.22.2",
+    "openai": "3.11.0",
+    "langgraph": "1.2.6",
+    "google-genai": "2.10.0"
+  },
+  "repeats": 2,
+  "max_requests": 100,
+  "max_turns": 3,
+  "max_output_tokens": 1024,
+  "timeout_seconds": 45,
+  "order_seed": 42,
+  "cost_note": "Requests are bounded. No monetary or provider feature guarantee follows. Fixture token usage is not measured."
+}

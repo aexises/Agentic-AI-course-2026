@@ -9,6 +9,7 @@ from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT, WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
+from docx.opc.constants import RELATIONSHIP_TYPE as RT
 from docx.shared import Inches, Pt, RGBColor
 
 
@@ -169,6 +170,20 @@ def clean_inline(text: str) -> str:
     return text.strip()
 
 
+def add_inline(paragraph, text):
+    """Render Markdown links as real hyperlinks without printing long URLs."""
+    cursor=0
+    for match in re.finditer(r"\[([^\]]+)\]\(([^)]+)\)",text):
+        paragraph.add_run(text[cursor:match.start()].replace("`", "").replace("**", ""))
+        link=OxmlElement("w:hyperlink")
+        link.set(qn("r:id"),paragraph.part.relate_to(match.group(2),RT.HYPERLINK,is_external=True))
+        run=OxmlElement("w:r"); props=OxmlElement("w:rPr")
+        color=OxmlElement("w:color");color.set(qn("w:val"),BLUE);props.append(color)
+        run.append(props);node=OxmlElement("w:t");node.text=match.group(1);run.append(node);link.append(run)
+        paragraph._p.append(link);cursor=match.end()
+    return paragraph.add_run(text[cursor:].replace("`", "").replace("**", ""))
+
+
 def configure_document(document: Document):
     section = document.sections[0]
     section.page_width = Inches(8.5)
@@ -250,8 +265,8 @@ def add_cover(document: Document):
     paragraph = cell.paragraphs[0]
     paragraph.paragraph_format.space_after = Pt(0)
     run = paragraph.add_run(
-        "A self-contained learning edition derived only from the supplied presentations "
-        "and their embedded references. Lecturer and institution identifiers were removed."
+        "Edition 9 September 2026. Agent architecture, research readings, and assessed "
+        "engineering practice with Gemini, LangGraph, and the OpenAI Agents SDK."
     )
     set_font(run, "Calibri", 11, False)
     document.add_page_break()
@@ -276,6 +291,8 @@ def add_markdown_table(document: Document, rows: list[list[str]]):
                 for run in paragraph.runs:
                     set_font(run, "Calibri", 9.5, r_index == 0)
     set_table_geometry(table, widths)
+    header = OxmlElement("w:tblHeader")
+    table.rows[0]._tr.get_or_add_trPr().append(header)
     document.add_paragraph().paragraph_format.space_after = Pt(2)
 
 
@@ -290,6 +307,7 @@ def build():
     lines = SOURCE.read_text(encoding="utf-8").splitlines()
     index = 0
     skipped_document_title = False
+    numbered_id = 100
     while index < len(lines):
         raw = lines[index].rstrip()
         line = raw.strip()
@@ -318,8 +336,15 @@ def build():
                 continue
             paragraph = document.add_paragraph(style="Heading 1")
             paragraph.paragraph_format.page_break_before = True
-            paragraph.add_run(clean_inline(line[2:]))
+            add_inline(paragraph,line[2:])
             index += 1
+            continue
+        if line == "## Source basis":
+            index += 1
+            while index < len(lines) and not lines[index].strip():
+                index += 1
+            if index < len(lines):
+                index += 1
             continue
         if line.startswith("## "):
             document.add_paragraph(clean_inline(line[3:]), style="Heading 2")
@@ -336,25 +361,39 @@ def build():
             set_cell_shading(cell, LIGHT)
             paragraph = cell.paragraphs[0]
             paragraph.paragraph_format.space_after = Pt(0)
-            run = paragraph.add_run(clean_inline(line[2:]))
+            run = add_inline(paragraph,line[2:])
             set_font(run, "Calibri", 11, True)
             index += 1
             continue
         if line.startswith("- "):
             paragraph = document.add_paragraph()
             apply_num(paragraph, 91)
-            paragraph.add_run(clean_inline(line[2:]))
+            add_inline(paragraph,line[2:])
             index += 1
             continue
         number_match = re.match(r"^\d+\.\s+(.*)$", line)
         if number_match:
             paragraph = document.add_paragraph()
-            apply_num(paragraph, 92)
-            paragraph.add_run(clean_inline(number_match.group(1)))
+            if re.match(r"^1\.\s", line):
+                numbered_id += 1
+                num = OxmlElement("w:num")
+                num.set(qn("w:numId"), str(numbered_id))
+                abstract = OxmlElement("w:abstractNumId")
+                abstract.set(qn("w:val"), "92")
+                num.append(abstract)
+                override = OxmlElement("w:lvlOverride")
+                override.set(qn("w:ilvl"), "0")
+                start = OxmlElement("w:startOverride")
+                start.set(qn("w:val"), "1")
+                override.append(start)
+                num.append(override)
+                document.part.numbering_part.element.append(num)
+            apply_num(paragraph, numbered_id)
+            add_inline(paragraph,number_match.group(1))
             index += 1
             continue
         paragraph = document.add_paragraph()
-        paragraph.add_run(clean_inline(line))
+        add_inline(paragraph,line)
         index += 1
 
     core = document.core_properties

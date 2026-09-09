@@ -1,0 +1,14 @@
+{
+  "attempted": 12,
+  "completed": 11,
+  "failed": 1,
+  "correct": 11,
+  "success_per_attempt": 0.9166666666666666,
+  "success_per_completion": 1.0,
+  "model_requests": 22,
+  "seconds_total": 0.044180707996929414,
+  "scheduled": 12,
+  "unattempted": 0,
+  "budget_exhausted": false,
+  "baseline_note": "Direct dictionary lookup receives the explicit product field. This task is intentionally solvable without an agent."
+}

@@ -62,6 +62,14 @@ Agentic RAG lets the model decide whether to retrieve, rewrite or decompose quer
 - Vector RAG finds semantically relevant text.
 - GraphRAG follows relationships at higher build cost.
 
+### Provenance and abstention make retrieval auditable
+
+Carry source IDs and text through every retrieval step. Check whether the evidence supports the answer separately from whether a citation ID exists. A bounded repair attempt should end in an answer or an explicit abstention.
+
+- Compare against static retrieval on the same questions.
+- Keep conflicting evidence visible.
+- Treat a rewrite as optional and measurable.
+
 ## Exam-ready summary
 
 - RAG provides fresh, private, and citable evidence.
@@ -76,8 +84,20 @@ Agentic RAG lets the model decide whether to retrieve, rewrite or decompose quer
 3. Why can top-k retrieval dilute an answer?
 4. Compare hybrid search, reranking, and query transformation.
 5. What is faithfulness and why is it important?
-6. When is GraphRAG preferable to vector RAG?
+6. What can a citation-membership test establish, and what remains untested?
+
+## Assessed practice
+
+Complete Lab 6 and add unknown, conflicting, and irrelevant records. Compare zero repair with one repair using a fixed question set.
+
+**Acceptance check:** Report retrieval hits, unsupported answers, abstentions, and attempts separately. A known citation ID alone does not count as grounded correctness.
+
+**Lab:** labs/06_langgraph_corrective_rag.ipynb
+
+## Reading and evidence
+
+- **S4** [Gemini structured outputs](https://ai.google.dev/gemini-api/docs/structured-output). Google documentation, accessed, 2026-09-09. Supported schemas constrain structure. Application validation must check meaning and policy.
 
 ## Source basis
 
-This chapter reorganizes and explains material from `06-rag-agentic-rag.pdf`. It adds study structure and design implications, but introduces no external factual sources.
+The original structure follows `06-rag-agentic-rag.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.

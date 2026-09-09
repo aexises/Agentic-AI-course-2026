@@ -64,6 +64,14 @@ A centralized supervisor decomposes, routes, and synthesizes with clear accounta
 - Hierarchies need bounded delegation at every level.
 - Measure handoffs, agent-specific failures, and total call budget.
 
+### Shared evidence matters more than agreement
+
+Anthropic's multi-agent experiments include information-sharing failures and conflicting objectives. For a classroom comparison, keep task scope and budget explicit. Agreement between agents does not establish independent evidence.
+
+- Inspect which facts each role receives.
+- Test a misleading cue shared across agents.
+- Give one component responsibility for synthesis and termination.
+
 ## Exam-ready summary
 
 - Use multiple agents for genuine specialization or parallelism.
@@ -78,8 +86,21 @@ A centralized supervisor decomposes, routes, and synthesizes with clear accounta
 3. Compare shared state, direct messaging, and publish-subscribe.
 4. When is a distributed runtime justified?
 5. Compare centralized, decentralized, and hierarchical topologies.
-6. How does a supervisor pattern terminate safely?
+6. Why can a team agree on an incorrect answer even when its members sample separately?
+
+## Assessed practice
+
+Complete Lab 7. Compare a single agent, an objective reviewer, and an optional model reviewer. Add one case where every role sees the same misleading cue.
+
+**Acceptance check:** Report extra requests and shared errors. Explain any scope or information advantage before comparing outcomes.
+
+**Lab:** labs/07_agents_sdk_evaluation.ipynb
+
+## Reading and evidence
+
+- **R1** [Patterns and problems in emerging multiagent systems](https://www.anthropic.com/research/multiagent-systems). Anthropic research post, 2026-08-13. Controlled coordination experiments. Compare scope and budgets before interpreting the findings.
+- **S2** [OpenAI Agents SDK model integration](https://openai.github.io/openai-agents-python/models/). SDK documentation, accessed, 2026-09-09. The course uses local tools with a Gemini Chat Completions compatibility endpoint.
 
 ## Source basis
 
-This chapter reorganizes and explains material from `08-multi-agent-systems.pdf`. It adds study structure and design implications, but introduces no external factual sources.
+The original structure follows `08-multi-agent-systems.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.

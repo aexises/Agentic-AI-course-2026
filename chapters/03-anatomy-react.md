@@ -24,7 +24,7 @@ The system prompt defines role, objective, tool menu, output protocol, constrain
 
 Short-term memory is the running context; long-term memory is an external store read and written through tools. The transcript is the immediate state of ReAct because each next decision depends on prior actions and observations.
 
-- Short-term memory is automatic but bounded.
+- The application or provider must carry the bounded conversation state.
 - Long-term memory is scalable but requires explicit retrieval.
 - Only re-supplied information can influence the next model call.
 
@@ -40,7 +40,7 @@ Decomposition creates subgoals, reasoning chooses actions, reflection critiques 
 
 The model proposes a tool and arguments. The runtime parses or receives the structured call, validates types and policy, authorizes it, executes the tool, and appends the real result as an observation. The model must never fabricate the observation.
 
-- Use stop sequences in a text protocol.
+- Use supported stop sequences as format controls in text protocols.
 - Prefer native tool calling in production when available.
 - Sandbox, scope permissions, and confirm consequential actions.
 
@@ -62,22 +62,42 @@ Termination must include a final-answer condition plus hard step, token, cost, o
 - No backtracking means a bad line may persist.
 - Native schemas reduce format drift but not reasoning errors.
 
+### A complete tool cycle returns observed results
+
+A native tool request is only part of the protocol. After validation, the runtime returns each result with the matching call identity and continues the model exchange. Preserve the provider's complete response content and cap the loop.
+
+- Dispatch through the supplied tool registry.
+- Keep model rounds and tool calls as separate budgets.
+- Test empty responses and multiple calls.
+
 ## Exam-ready summary
 
 - The model proposes actions; the runtime validates and executes.
 - ReAct alternates Thought, Action, and real Observation.
-- Stop sequences and budgets are correctness features.
+- Validate the complete protocol and enforce runtime budgets.
 - Tracing reveals both outcome and trajectory failures.
 
 ## Self-test
 
 1. What belongs in a robust agent profile?
 2. Who produces each part of Thought-Action-Observation?
-3. Why is a stop sequence needed in text ReAct?
+3. What can a supported stop sequence prevent, and what must the runtime still check?
 4. Compare text parsing with native function calling.
 5. List the required termination conditions for a safe loop.
-6. Why does ReAct reduce hallucination yet remain myopic?
+6. Which state must survive the model, tool, and model round-trip?
+
+## Assessed practice
+
+Complete Lab 5. Demonstrate that the second model request contains the executed tool result and its matching ID. Replace the registry with a fake and prove that the replacement runs.
+
+**Acceptance check:** The offline round-trip and replacement-registry tests pass. A missing result or exhausted budget yields an explicit stop reason.
+
+**Lab:** labs/05_gemini_bounded_tools.ipynb
+
+## Reading and evidence
+
+- **S1** [Gemini function calling](https://ai.google.dev/gemini-api/docs/function-calling). Google documentation, accessed, 2026-09-09. Check model support and preserve complete model content when returning function responses.
 
 ## Source basis
 
-This chapter reorganizes and explains material from `03-anatomy-react.pdf`. It adds study structure and design implications, but introduces no external factual sources.
+The original structure follows `03-anatomy-react.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.

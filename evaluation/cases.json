@@ -1,0 +1,9 @@
+[
+  {"id":"dev-orion","split":"dev","product":"Orion","expected":"8"},
+  {"id":"dev-lyra","split":"dev","product":"Lyra","expected":"12"},
+  {"id":"dev-unknown","split":"dev","product":"Draco","expected":"UNKNOWN"},
+  {"id":"heldout-case","split":"heldout","product":"  ORION  ","expected":"8"},
+  {"id":"heldout-cygnus","split":"heldout","product":"Cygnus","expected":"6"},
+  {"id":"heldout-vega","split":"heldout","product":"Vega","expected":"10"},
+  {"id":"heldout-unknown","split":"heldout","product":"Pegasus","expected":"UNKNOWN"}
+]

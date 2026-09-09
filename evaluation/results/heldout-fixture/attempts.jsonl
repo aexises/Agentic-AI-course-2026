@@ -1,0 +1,16 @@
+{"index": 0, "id": "heldout-cygnus", "repeat": 1, "condition": "cue", "event": "started"}
+{"index": 1, "id": "heldout-vega", "repeat": 0, "condition": "cue", "event": "started"}
+{"index": 2, "id": "heldout-cygnus", "repeat": 0, "condition": "cue", "event": "started"}
+{"index": 3, "id": "heldout-cygnus", "repeat": 1, "condition": "clean", "event": "started"}
+{"index": 4, "id": "heldout-unknown", "repeat": 1, "condition": "clean", "event": "started"}
+{"index": 5, "id": "heldout-vega", "repeat": 1, "condition": "clean", "event": "started"}
+{"index": 6, "id": "heldout-unknown", "repeat": 0, "condition": "clean", "event": "started"}
+{"index": 7, "id": "heldout-vega", "repeat": 0, "condition": "clean", "event": "started"}
+{"index": 8, "id": "heldout-case", "repeat": 0, "condition": "cue", "event": "started"}
+{"index": 9, "id": "heldout-case", "repeat": 1, "condition": "clean", "event": "started"}
+{"index": 10, "id": "heldout-unknown", "repeat": 0, "condition": "cue", "event": "started"}
+{"index": 11, "id": "heldout-unknown", "repeat": 1, "condition": "cue", "event": "started"}
+{"index": 12, "id": "heldout-cygnus", "repeat": 0, "condition": "clean", "event": "started"}
+{"index": 13, "id": "heldout-vega", "repeat": 1, "condition": "cue", "event": "started"}
+{"index": 14, "id": "heldout-case", "repeat": 0, "condition": "clean", "event": "started"}
+{"index": 15, "id": "heldout-case", "repeat": 1, "condition": "cue", "event": "started"}

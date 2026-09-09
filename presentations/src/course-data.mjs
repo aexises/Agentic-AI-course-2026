@@ -1,3 +1,5 @@
+import { applyCourseUpdate } from "./course-update.mjs";
+
 export const course = {
   title: "Agentic AI",
   subtitle: "From language models to reliable autonomous systems",
@@ -144,8 +146,8 @@ export const course = {
           explanation:
             "Chain-of-thought externalizes intermediate steps. Self-consistency samples several chains and votes. Program-aided language models generate code and delegate exact computation to an interpreter. Reasoning models spend additional test-time compute on difficult problems.",
           bullets: [
-            "Use a single chain for ordinary multi-step reasoning.",
-            "Use voting when a clear answer needs robustness.",
+            "Compare direct answers and reasoning prompts on the target task.",
+            "Test voting against a baseline with a declared call budget.",
             "Use executable programs when exact computation matters.",
             "Pay for deliberate reasoning only on hard steps.",
           ],
@@ -153,7 +155,7 @@ export const course = {
         {
           title: "Structured output closes the software loop",
           explanation:
-            "Free-form prose is difficult for a runtime to execute safely. Instructed JSON is brittle; constrained decoding enforces a grammar; native function calling produces provider-enforced structured calls. The runtime must still validate and authorize arguments.",
+            "Structured-output support varies by provider, model, and schema. Native function calling supplies a protocol for tool requests. The application must validate arguments, check policy, and handle invalid or incomplete responses.",
           bullets: [
             "Schema validity is not semantic correctness.",
             "Tool descriptions steer selection and argument filling.",
@@ -217,7 +219,7 @@ export const course = {
           explanation:
             "Short-term memory is the running context; long-term memory is an external store read and written through tools. The transcript is the immediate state of ReAct because each next decision depends on prior actions and observations.",
           bullets: [
-            "Short-term memory is automatic but bounded.",
+            "The application or provider must carry the bounded conversation state.",
             "Long-term memory is scalable but requires explicit retrieval.",
             "Only re-supplied information can influence the next model call.",
           ],
@@ -237,7 +239,7 @@ export const course = {
           explanation:
             "The model proposes a tool and arguments. The runtime parses or receives the structured call, validates types and policy, authorizes it, executes the tool, and appends the real result as an observation. The model must never fabricate the observation.",
           bullets: [
-            "Use stop sequences in a text protocol.",
+            "Use supported stop sequences as format controls in text protocols.",
             "Prefer native tool calling in production when available.",
             "Sandbox, scope permissions, and confirm consequential actions.",
           ],
@@ -268,13 +270,13 @@ export const course = {
       takeaways: [
         "The model proposes actions; the runtime validates and executes.",
         "ReAct alternates Thought, Action, and real Observation.",
-        "Stop sequences and budgets are correctness features.",
+        "Validate the complete protocol and enforce runtime budgets.",
         "Tracing reveals both outcome and trajectory failures.",
       ],
       examQuestions: [
         "What belongs in a robust agent profile?",
         "Who produces each part of Thought-Action-Observation?",
-        "Why is a stop sequence needed in text ReAct?",
+        "What can a supported stop sequence prevent, and what must the runtime still check?",
         "Compare text parsing with native function calling.",
         "List the required termination conditions for a safe loop.",
         "Why does ReAct reduce hallucination yet remain myopic?",
@@ -427,12 +429,12 @@ export const course = {
           ],
         },
         {
-          title: "MCP is bidirectional and transport-independent",
+          title: "MCP capabilities depend on the selected version",
           explanation:
-            "Servers expose tools, resources, and prompts; clients can expose sampling, roots, and elicitation. The same protocol messages can flow over local stdio or remote Streamable HTTP sessions.",
+            "For the MCP 2025-11-25 baseline, servers expose tools, resources, and prompts. Clients can support sampling, roots, and elicitation. This edition discusses stdio and Streamable HTTP and requires implementations to enforce access controls.",
           bullets: [
             "Sampling lets a server request host-model generation.",
-            "Roots communicate permitted filesystem scopes.",
+            "Roots advertise filesystem context. Implementations enforce access.",
             "Elicitation asks the user for input during a task.",
             "Transport choice changes deployment and trust assumptions.",
           ],
@@ -772,14 +774,14 @@ export const course = {
           ],
         },
         {
-          title: "A2A builds agent collaboration on web standards",
+          title: "A2A 1.0.0 separates operations from bindings",
           explanation:
-            "The Agent-to-Agent protocol uses HTTP, JSON-RPC, server-sent events, and standard authentication. Its design supports natural agentic interaction, secure enterprise use, long-running tasks, and multiple modalities.",
+            "A2A 1.0.0 defines a task and message model with JSON-RPC, gRPC, and HTTP/REST bindings. This course traces JSON-RPC over HTTP. Select a binding and version explicitly when implementing discovery, streaming, and authentication.",
           bullets: [
-            "HTTP provides transport.",
-            "JSON-RPC structures requests and responses.",
-            "SSE streams task updates.",
-            "Standard authentication lowers integration friction.",
+            "This course uses the JSON-RPC binding over HTTP.",
+            "Other defined bindings include gRPC and HTTP/REST.",
+            "The JSON-RPC streaming path uses server-sent events.",
+            "The application authenticates and authorizes each caller.",
           ],
         },
         {
@@ -859,7 +861,7 @@ export const course = {
           explanation:
             "Chain-of-thought provides one linear path. It can make intermediate work inspectable, but a greedy chain has no exploration or recovery and its verbalized explanation is not guaranteed to be a faithful record of internal computation.",
           bullets: [
-            "Use a single chain for ordinary multi-step tasks.",
+            "Compare a direct baseline with explicit reasoning on the task.",
             "Verify outputs externally where possible.",
             "Do not treat stated reasoning as ground truth.",
           ],
@@ -867,11 +869,11 @@ export const course = {
         {
           title: "Self-consistency widens exploration by sampling",
           explanation:
-            "Generate several independent reasoning chains and take the majority answer. Different correct paths may converge on the same result while wrong paths are less likely to converge on one specific error.",
+            "Self-consistency samples multiple reasoning paths and aggregates their answers. Separately sampled outputs may share systematic errors. Measure whether voting improves the target task under a declared budget.",
           bullets: [
             "Cost grows roughly with the number of samples.",
             "Voting requires an answer that can be aggregated.",
-            "Independence and diversity are part of the value.",
+            "Measure shared errors rather than assuming independence.",
           ],
         },
         {
@@ -1140,7 +1142,7 @@ export const course = {
           bullets: [
             "Reliability includes retries, timeouts, fallbacks, and idempotency.",
             "Compliance and security join functional correctness.",
-            "Most engineering effort surrounds the model.",
+            "The runtime, tools, and operating process need their own tests.",
           ],
         },
         {
@@ -1217,3 +1219,5 @@ export const course = {
     },
   ],
 };
+
+applyCourseUpdate(course);

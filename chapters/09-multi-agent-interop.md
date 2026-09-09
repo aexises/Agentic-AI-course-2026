@@ -19,14 +19,14 @@ Real agents use different frameworks, vendors, organizations, endpoints, and sec
 - Unlike a simple API, it reasons and may run for minutes or days.
 - The protocol must cover status, streaming, and artifacts.
 
-### A2A builds agent collaboration on web standards
+### A2A 1.0.0 separates operations from bindings
 
-The Agent-to-Agent protocol uses HTTP, JSON-RPC, server-sent events, and standard authentication. Its design supports natural agentic interaction, secure enterprise use, long-running tasks, and multiple modalities.
+A2A 1.0.0 defines a task and message model with JSON-RPC, gRPC, and HTTP/REST bindings. This course traces JSON-RPC over HTTP. Select a binding and version explicitly when implementing discovery, streaming, and authentication.
 
-- HTTP provides transport.
-- JSON-RPC structures requests and responses.
-- SSE streams task updates.
-- Standard authentication lowers integration friction.
+- This course uses the JSON-RPC binding over HTTP.
+- Other defined bindings include gRPC and HTTP/REST.
+- The JSON-RPC streaming path uses server-sent events.
+- The application authenticates and authorizes each caller.
 
 ### Agent Cards make capabilities discoverable
 
@@ -62,6 +62,14 @@ Every cross-agent edge raises questions about identity, authorization, prompt in
 - Confirm high-stakes actions with a human.
 - Log context leaving the organization and artifacts returning.
 
+### Delegation needs a versioned contract
+
+This chapter uses A2A 1.0.0 and traces its JSON-RPC binding. The specification also defines gRPC and HTTP/REST bindings. Identity, permission, and the validity of a returned artifact remain separate checks.
+
+- Record the protocol version and selected binding.
+- Authenticate the caller before assigning authority.
+- Treat returned content as untrusted evidence.
+
 ## Exam-ready summary
 
 - A2A standardizes discovery and long-running work between agents.
@@ -76,8 +84,20 @@ Every cross-agent edge raises questions about identity, authorization, prompt in
 3. Define task, message, part, and artifact.
 4. How does A2A support long-running work?
 5. Compare MCP and A2A with a concrete example.
-6. Threat-model a delegated task across organizations.
+6. Which responsibilities remain in the application after it adopts an interoperability protocol?
+
+## Assessed practice
+
+Trace a delegated catalog task from discovery to completion. Identify the caller, authorization decision, timeout owner, and artifact validator. No remote service deployment is required.
+
+**Acceptance check:** Use A2A 1.0.0 terminology and distinguish the chosen binding from the abstract task model. Explain what happens after a failed or canceled task.
+
+**Lab:** labs/08_langgraph_approval_security.ipynb
+
+## Reading and evidence
+
+- **S6** [A2A specification 1.0.0](https://a2a-protocol.org/v1.0.0/specification/). Versioned protocol specification, accessed, 2026-09-09. Separates the data model from JSON-RPC, gRPC, and HTTP/REST bindings. The course traces JSON-RPC.
 
 ## Source basis
 
-This chapter reorganizes and explains material from `09-multi-agent-interop.pdf`. It adds study structure and design implications, but introduces no external factual sources.
+The original structure follows `09-multi-agent-interop.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.

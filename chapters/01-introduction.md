@@ -61,6 +61,14 @@ Start with a single call or fixed workflow and add model-directed decisions only
 - Bound long horizons because errors compound.
 - Treat the production agent as a stack: model, tools, state, orchestration, eval, and guardrails.
 
+### A baseline makes autonomy a testable choice
+
+Choose a small task with observable success before building an agent. Compare a fixed workflow with a model-directed loop on the same inputs. Treat the decision to add autonomy as an engineering hypothesis.
+
+- Write expected outputs before implementation.
+- Keep task inputs and resource limits comparable.
+- Retain the simpler design when it meets the requirements.
+
 ## Exam-ready summary
 
 - Agent = LLM reasoning core + tools + loop + memory.
@@ -75,8 +83,20 @@ Start with a single call or fixed workflow and add model-directed decisions only
 3. Compare chatbot, workflow, and agent by control flow and tool use.
 4. Name the four agent components and the responsibility of each.
 5. Why are typical LLM-agent environments difficult?
-6. Explain the principle of minimum sufficient autonomy.
+6. How would you test whether a fixed workflow is sufficient for a task?
+
+## Assessed practice
+
+Choose a catalog lookup or arithmetic task. Write six cases, including empty input and an unknown item. Define a pass condition and a call limit. Explain what dynamic decision, if any, needs a model.
+
+**Acceptance check:** Submit the cases and an architecture choice before running a model. Credit follows the evidence, including a decision to keep a fixed workflow.
+
+**Lab:** labs/05_gemini_bounded_tools.ipynb
+
+## Reading and evidence
+
+Use the classroom baseline and its explicit acceptance tests. This activity is a teaching design.
 
 ## Source basis
 
-This chapter reorganizes and explains material from `01-introduction.pdf`. It adds study structure and design implications, but introduces no external factual sources.
+The original structure follows `01-introduction.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.

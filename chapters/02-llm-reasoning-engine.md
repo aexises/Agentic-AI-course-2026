@@ -39,14 +39,14 @@ In-context learning teaches a task through instructions and examples without cha
 
 Chain-of-thought externalizes intermediate steps. Self-consistency samples several chains and votes. Program-aided language models generate code and delegate exact computation to an interpreter. Reasoning models spend additional test-time compute on difficult problems.
 
-- Use a single chain for ordinary multi-step reasoning.
-- Use voting when a clear answer needs robustness.
+- Compare direct answers and reasoning prompts on the target task.
+- Test voting against a baseline with a declared call budget.
 - Use executable programs when exact computation matters.
 - Pay for deliberate reasoning only on hard steps.
 
 ### Structured output closes the software loop
 
-Free-form prose is difficult for a runtime to execute safely. Instructed JSON is brittle; constrained decoding enforces a grammar; native function calling produces provider-enforced structured calls. The runtime must still validate and authorize arguments.
+Structured-output support varies by provider, model, and schema. Native function calling supplies a protocol for tool requests. The application must validate arguments, check policy, and handle invalid or incomplete responses.
 
 - Schema validity is not semantic correctness.
 - Tool descriptions steer selection and argument filling.
@@ -60,6 +60,14 @@ Prompting changes behavior quickly. RAG injects current or private knowledge at 
 - Choose RAG for fresh, private, or citable knowledge.
 - Choose fine-tuning for stable behavior at sufficient scale.
 - Ground hallucination; do not expect prompting alone to remove it.
+
+### Behavioral claims need an external check
+
+CHIVE investigates model behavior by editing prompts and measuring the resulting responses. In this course, a plausible explanation is a hypothesis to test. Schema checks, factual checks, and policy checks answer different questions.
+
+- Predict the effect of one prompt edit.
+- Score the response with a stated criterion.
+- Distinguish measured behavior from a causal explanation.
 
 ## Exam-ready summary
 
@@ -75,8 +83,21 @@ Prompting changes behavior quickly. RAG injects current or private knowledge at 
 3. Compare zero-shot, few-shot, chain-of-thought, self-consistency, and PAL.
 4. Why is valid JSON insufficient as a security guarantee?
 5. When should an engineer choose RAG rather than fine-tuning?
-6. What do LoRA and QLoRA change about fine-tuning economics?
+6. Why can a valid schema and a plausible explanation still accompany a wrong answer?
+
+## Assessed practice
+
+Keep a factual task fixed and add one misleading cue. Predict whether the answer will change. Record both conditions and identify which check tests structure, evidence, or policy.
+
+**Acceptance check:** The submission contains paired inputs and a testable prediction. It does not treat verbal reasoning as ground truth.
+
+**Lab:** labs/07_agents_sdk_evaluation.ipynb
+
+## Reading and evidence
+
+- **P3** [Would this change your answer?](https://arxiv.org/abs/2608.16747). Anthropic/Fellows preprint, arXiv v1, 2026-08-17. CHIVE tests counterfactual prompt changes. Generated explanations remain hypotheses. Official post: August 21.
+- **S4** [Gemini structured outputs](https://ai.google.dev/gemini-api/docs/structured-output). Google documentation, accessed, 2026-09-09. Supported schemas constrain structure. Application validation must check meaning and policy.
 
 ## Source basis
 
-This chapter reorganizes and explains material from `02-llm-reasoning-engine.pdf`. It adds study structure and design implications, but introduces no external factual sources.
+The original structure follows `02-llm-reasoning-engine.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.

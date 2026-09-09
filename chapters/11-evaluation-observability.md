@@ -62,6 +62,14 @@ A run trace is a tree of spans for model calls, tools, retrieval, and agents. Ea
 - Run the same set on prompt, model, tool, or dependency changes.
 - Alert on quality, latency, cost, and safety drift.
 
+### A run manifest makes comparisons reviewable
+
+Record the complete setup and every attempted run. A completed answer can be wrong, and an infrastructure failure is a different outcome. Fixed cases and explicit denominators make a comparison inspectable.
+
+- Store model ID, prompt hash, and dependency versions.
+- Record attempted and completed runs separately.
+- Keep outcome scoring separate from resource use.
+
 ## Exam-ready summary
 
 - Evaluation is continuous system steering, not a final phase.
@@ -76,8 +84,21 @@ A run trace is a tree of spans for model calls, tools, retrieval, and agents. Ea
 3. What makes execution-based evaluation strong?
 4. How can benchmark contamination and weak tests mislead?
 5. What biases affect LLM-as-judge?
-6. What should a trace span record, and how does eval-in-CI use it?
+6. How should an evaluation distinguish a wrong answer from an API failure?
+
+## Assessed practice
+
+Run the offline evaluation command, inspect its JSONL records, and test the failure path. For live inference, predeclare a model and budget before using the held-out split.
+
+**Acceptance check:** A fresh rerun produces a manifest and one record per attempted case. Interrupted or failed requests do not disappear from the denominator.
+
+**Lab:** labs/07_agents_sdk_evaluation.ipynb
+
+## Reading and evidence
+
+- **P3** [Would this change your answer?](https://arxiv.org/abs/2608.16747). Anthropic/Fellows preprint, arXiv v1, 2026-08-17. CHIVE tests counterfactual prompt changes. Generated explanations remain hypotheses. Official post: August 21.
+- **R2** [How enabling two settings tripled our scores on the ARC-AGI-3 benchmark](https://openai.com/index/how-two-settings-tripled-our-arc-agi-3-scores/). OpenAI research post, 2026-07-29. A specific harness experiment. Its result does not estimate the effect of context changes in Gemini.
 
 ## Source basis
 
-This chapter reorganizes and explains material from `11-evaluation-observability.pdf`. It adds study structure and design implications, but introduces no external factual sources.
+The original structure follows `11-evaluation-observability.pdf`. The 2026-09-09 edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.

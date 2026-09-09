@@ -1,5 +1,10 @@
 tmp/
 .DS_Store
+node_modules
 node_modules/
 *.log
-EXAM-GUIDE.md
+
+.venv-labs/
+__pycache__/
+.pytest_cache/
+.ipynb_checkpoints/

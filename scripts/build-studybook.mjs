@@ -41,9 +41,21 @@ ${bullets(chapter.takeaways)}
 
 ${questions(chapter.examQuestions)}
 
+## Assessed practice
+
+${chapter.activity.task}
+
+**Acceptance check:** ${chapter.activity.acceptance}
+
+**Lab:** ${chapter.activity.lab}
+
+## Reading and evidence
+
+${chapter.readings.length ? chapter.readings.map(r => `- **${r.id}** [${r.title}](${r.url}). ${r.kind}, ${r.date}. ${r.note}`).join("\n") : "Use the classroom baseline and its explicit acceptance tests. This activity is a teaching design."}
+
 ## Source basis
 
-This chapter reorganizes and explains material from \`${chapter.source}\`. It adds study structure and design implications, but introduces no external factual sources.
+The original structure follows \`${chapter.source}\`. The ${course.edition} edition adds the readings above, protocol clarifications, and assessed practice. Research findings and classroom exercises have different scopes.
 `;
 }
 
@@ -77,15 +89,14 @@ const frontMatter = `# ${course.title}: Studybook and Exam Conspect
 
 ${course.subtitle}.
 
-This repository is a self-contained learning edition of the supplied course material. It removes lecturer and institution identifiers, consolidates repeated ideas, and converts presentation fragments into a cumulative study narrative. No external facts were added.
+This studybook develops agent architecture through implementation, evaluation, and operating decisions. The ${course.edition} edition combines the original 13-chapter structure with dated research readings and assessed labs using Gemini, LangGraph, and the OpenAI Agents SDK. Each chapter states an observable acceptance check.
 
 ## How to use this studybook
 
-1. Read chapters 1-3 to establish the agent model and the ReAct loop.
-2. Use chapters 4-7 to learn architecture: patterns, tools, retrieval, and memory.
-3. Use chapters 8-10 for coordination and advanced reasoning.
-4. Use chapters 11-13 to learn evaluation, security, and production discipline.
-5. Answer each chapter's self-test without notes, then check the exam-ready summary.
+1. Follow the chapter sequence below; complete each assessed practice and self-test.
+2. Use repaired Labs 3-4 before the four assessed Labs 5-8; finish with teaching/CAPSTONE.md.
+3. Record failures as well as successes. Fixtures test code; live experiments test a configured system.
+4. Read research findings with their stated limitations.
 
 ## Course map
 
@@ -138,6 +149,8 @@ const examGuide = `# Exam Preparation Guide
 
 ## Practice method
 
+For a coding assessment, submit the input cases, expected results, versioned setup, and observed failures. Compare a simpler baseline before adding autonomy. Distinguish a malformed response, a wrong answer, an API failure, and a denied action. The capstone rubric appears in teaching/CAPSTONE.md.
+
 For every architecture question, answer in four passes: define the components, trace control flow, identify failure modes, then state evaluation and safety controls. This mirrors how the source course develops each topic and prevents answers that describe capability without engineering discipline.
 `;
 
@@ -171,7 +184,7 @@ async function buildReferenceAppendix() {
   }
   return `# Source Reference Appendix
 
-The entries below are transcribed from the reference slides in the supplied PDFs. They are retained as the evidence base for the rewritten studybook and improved presentations. No additional web sources were introduced.
+The entries below are transcribed from the reference slides in the supplied PDFs. They are retained as the evidence base for the rewritten studybook and improved presentations. The dated research additions appear in each chapter and in improvements/RESEARCH-UPDATE.md. This appendix preserves the original source references.
 
 ${blocks.join("\n\n")}
 `;
