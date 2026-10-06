@@ -11,6 +11,10 @@ Four 90–120 minute labs extend the supplied AAI[sum26] Lab 3 (manual ReAct and
 
 All notebook fixtures are invented. Offline results demonstrate software behavior, not model quality. The notebooks use real LangGraph, Google GenAI data types, and the OpenAI Agents SDK. A scripted model substitutes for network inference in Lab 7. The Gemini API is the optional live provider; no OpenAI key is needed.
 
+## Additional framework track
+
+[Labs 9–11](frameworks/README.md) add LangGraph parallel workers, LangChain agent middleware, and PydanticAI typed agents. They have separate pinned dependencies, student notebooks, instructor solutions, and an execution report. Use a separate environment; the commands below apply to Labs 3–8.
+
 ## Repaired foundation examples
 
 [Lab 3 · Manual ReAct](03_react_tools_repaired.ipynb) and [Lab 4 · Corrective RAG](04_corrective_rag_repaired.ipynb) are worked, offline examples adapted from the audited AAI[sum26] contracts. Lab 3 respects injected tool registries and bounds arithmetic and loop execution. Lab 4 fixes the search-client constructor and response fields, retains source URLs, and tests correction and abstention. The original reference project remains untouched; distribute these course-local replacements. Lab 5 supplies the complete native Gemini tool round-trip.

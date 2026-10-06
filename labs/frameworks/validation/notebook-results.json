@@ -1,0 +1,67 @@
+{
+  "checked": "2026-10-06",
+  "python": "3.12.14 (main, Aug 25 2026, 13:50:33) [Clang 22.1.3 ]",
+  "platform": "macOS-26.3.1-arm64-arm-64bit",
+  "packages": {
+    "langgraph": "1.2.14",
+    "langchain": "1.4.3",
+    "langchain-google-genai": "4.4.0",
+    "pydantic-ai-slim": "2.54.0",
+    "pydantic": "2.13.5",
+    "google-genai": "2.28.0",
+    "nbformat": "5.11.1",
+    "nbclient": "0.11.0",
+    "ipykernel": "7.4.0",
+    "nbconvert": "7.17.1"
+  },
+  "notebooks": [
+    {
+      "notebook": "labs/frameworks/09_langgraph_parallel_workers.ipynb",
+      "sha256": "a8ce0a222cacd462eafc3ff4582203878aca2471e41a03b17908fd1df448034f",
+      "status": "passed",
+      "code_cells": 7,
+      "exercises": "disabled; worked examples executed",
+      "live_api": "not run"
+    },
+    {
+      "notebook": "labs/frameworks/10_langchain_middleware.ipynb",
+      "sha256": "b03613058f931026c71e8c013fa47068a13657e0716eeae3f8bce85b70cd527b",
+      "status": "passed",
+      "code_cells": 8,
+      "exercises": "disabled; worked examples executed",
+      "live_api": "not run"
+    },
+    {
+      "notebook": "labs/frameworks/11_pydanticai_typed_agents.ipynb",
+      "sha256": "265ce6b054e83d1d12162c4811cdb41e83f68f10b3c696df38449612e35773e6",
+      "status": "passed",
+      "code_cells": 8,
+      "exercises": "disabled; worked examples executed",
+      "live_api": "not run"
+    },
+    {
+      "notebook": "labs/frameworks/instructor/09_langgraph_parallel_workers.ipynb",
+      "sha256": "95503a1fea836ec25a0e5a355d8346e4e8b59b3ca615fb7fc9eeb935f563f48c",
+      "status": "passed",
+      "code_cells": 7,
+      "exercises": "executed",
+      "live_api": "not run"
+    },
+    {
+      "notebook": "labs/frameworks/instructor/10_langchain_middleware.ipynb",
+      "sha256": "af0e46d34cd7892f62782c91a8874c7027d98f0fd225e7ad99d1f89b4a806c28",
+      "status": "passed",
+      "code_cells": 8,
+      "exercises": "executed",
+      "live_api": "not run"
+    },
+    {
+      "notebook": "labs/frameworks/instructor/11_pydanticai_typed_agents.ipynb",
+      "sha256": "8eee4aee2c30bb49ae544e428278013781990afda012111a5e70bfaeb4ac9a15",
+      "status": "passed",
+      "code_cells": 8,
+      "exercises": "executed",
+      "live_api": "not run"
+    }
+  ]
+}

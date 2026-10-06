@@ -12,7 +12,9 @@ with tempfile.TemporaryDirectory(prefix='lab-kernels-') as tmp:
     kernel.mkdir()
     (kernel/'kernel.json').write_text(json.dumps({'argv':[sys.executable,'-m','ipykernel_launcher','-f','{connection_file}'],'display_name':'Course validation','language':'python'}))
     manager=KernelSpecManager(kernel_dirs=[tmp])
-    for path in sorted((root/'labs').rglob('*.ipynb')):
+    # The framework track has its own pinned environment and validator.
+    paths = sorted((root/'labs').glob('*.ipynb')) + sorted((root/'labs'/'instructor').glob('*.ipynb'))
+    for path in paths:
         notebook=nbformat.read(path,as_version=4)
         nbformat.validate(notebook)
         assert all('RUN_LIVE = True' not in c.source for c in notebook.cells if c.cell_type=='code')

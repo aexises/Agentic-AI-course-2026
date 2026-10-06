@@ -11,3 +11,7 @@ Use `evaluation/README.md` for the separate repeated-run harness. The published 
 For research discussion, ask students to identify the task, intervention, comparison, metric, and limitation before proposing a course design change. CHIVE does not make every explanation faithful; a harness improvement on one benchmark is not a universal model improvement; multi-agent failure observations do not prove all teams are worse than individual agents. Require the actual source passage for claims beyond the course's scoped summary.
 
 Run the [pilot](PILOT-GUIDE.md) before committing to the proposed durations. Use the [capstone](CAPSTONE.md) after the four labs. Complete the [submission template](SUBMISSION-TEMPLATE.md) for each demonstration so students see what a reproducible report contains.
+
+## Additional framework practice
+
+Use [Labs 9–11](../labs/frameworks/README.md) after the core labs to teach LangGraph parallel state updates, LangChain middleware and termination, and PydanticAI semantic output validation. Each is planned for 110 minutes, with two graded implementation tasks and separate instructor solutions. Keep their environment separate from Labs 3–8. Ask students to compare architecture with the existing Agents SDK Lab 7 using the same task contracts, not incomparable model scores. The new track documents its own [validation scope](../labs/frameworks/VALIDATION.md).
