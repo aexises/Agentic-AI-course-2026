@@ -45,8 +45,8 @@ def test_search_contract_and_malformed():
 
 def test_rag_repair_and_abstention():
     records=[{'id':'a','source':'local:a','text':'old irrelevant'}]
-    out=s.corrective_rag('battery',records,lambda q,d:True,lambda q:'battery',lambda q:[{'id':'b','source':'local:b','text':'battery 8'}],lambda q,d:d[0]['source'])
-    assert out['answer']=='local:b' and out['trace'][1]['retrieved_ids']==['b']
+    out=s.corrective_rag('battery',records,lambda q,d:True,lambda q:'battery',lambda q:[{'id':'b','source':'local:b','text':'battery 8'}],lambda q,d:{'text':d[0]['text'],'citations':[d[0]['id']]})
+    assert out['answer']['citations']==['b'] and out['trace'][1]['retrieved_ids']==['b']
     assert records==[{'id':'a','source':'local:a','text':'old irrelevant'}]
     no=s.corrective_rag('missing',[],lambda q,d:False,lambda q:q,lambda q:[],lambda q,d:'bad')
     assert no['status']=='abstained' and len(no['trace'])==3
@@ -90,3 +90,14 @@ def test_cancelled_attempt_is_retained(tmp_path):
     row=json.loads((tmp_path/'cancel/runs.jsonl').read_text())
     assert row['error_type']=='CancelledError' and row['requests']==1
     assert json.loads((tmp_path/'cancel/attempts.jsonl').read_text())['event']=='started'
+
+
+def test_repaired_rag_answer_and_evidence_boundaries():
+    records=[{'id':'a','source':'fixture://a','text':'camera policy'}]
+    for answer in ('unsupported', {'text':'x','citations':['missing']}, {'text':'','citations':['a']}):
+        result=s.corrective_rag('camera',records,lambda q,d:True,lambda q:q,lambda q:[],lambda q,d:answer)
+        assert result['status']=='invalid_answer'
+    with pytest.raises(ValueError,match='bool'):
+        s.corrective_rag('camera',records,lambda q,d:'no',None,None,None)
+    with pytest.raises(ValueError,match='duplicate'):
+        s.retrieve('camera',records+records)

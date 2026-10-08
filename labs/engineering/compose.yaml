@@ -1,0 +1,19 @@
+name: course-engineering
+services:
+  api:
+    build: .
+    image: course-engineering:${COURSE_RELEASE:-dev}
+    environment:
+      COURSE_RELEASE: ${COURSE_RELEASE:-dev}
+      COURSE_TRACE: ${COURSE_TRACE:-0}
+    ports:
+      - "127.0.0.1:58018:8000"
+    volumes:
+      - ticket-data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+volumes:
+  ticket-data:

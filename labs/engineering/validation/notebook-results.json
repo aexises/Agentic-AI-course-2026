@@ -1,0 +1,47 @@
+{
+  "python": "3.12.14 (main, Aug 25 2026, 13:50:33) [Clang 22.1.3 ]",
+  "results": [
+    {
+      "path": "18_enterprise_tools_mcp.ipynb",
+      "sha256": "150ad2dd7f48fb64ccafa843d548eb848d1848f2478b0dc5d00548485d57468f",
+      "status": "passed",
+      "exercises": "disabled: setup only",
+      "live_api": "not run"
+    },
+    {
+      "path": "19_local_delivery_and_migrations.ipynb",
+      "sha256": "d72c662ef47b400d26d3e06aefe949a499a02ea6667094348941aafc989da495",
+      "status": "passed",
+      "exercises": "disabled: setup only",
+      "live_api": "not run"
+    },
+    {
+      "path": "20_observability_performance_cost.ipynb",
+      "sha256": "88254a48df780a0a3648a061f27c8b59ed4ffd8d9be589441b4fdc17f4bc5cc8",
+      "status": "passed",
+      "exercises": "disabled: setup only",
+      "live_api": "not run"
+    },
+    {
+      "path": "instructor/18_enterprise_tools_mcp.ipynb",
+      "sha256": "b72dfb80b79006847c58ebf5870bf9da401f48739a34cb84b9bdc70fb6b097a8",
+      "status": "passed",
+      "exercises": "executed",
+      "live_api": "not run"
+    },
+    {
+      "path": "instructor/19_local_delivery_and_migrations.ipynb",
+      "sha256": "bceeab6f26e2c4c155be816c5779a172ba3b3d8ce401a80b64ccd700417eb98b",
+      "status": "passed",
+      "exercises": "executed",
+      "live_api": "not run"
+    },
+    {
+      "path": "instructor/20_observability_performance_cost.ipynb",
+      "sha256": "93877d94a8ec32044e031d25b39daa0363ca2a8e335d307ee3345500d5a9ab61",
+      "status": "passed",
+      "exercises": "executed",
+      "live_api": "not run"
+    }
+  ]
+}

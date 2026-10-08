@@ -1,5 +1,7 @@
 # Instructor preparation and grading
 
+For the current full course, use the [self-study route](../../teaching/SELF-STUDY-GUIDE.md) and [two-outcome capstone](../../teaching/CAPSTONE.md). Labs 18–20 follow this track. Allocate extra HTTP, SQL and Docker practice using the [backend primer](../engineering/BACKEND-PRIMER.md).
+
 Complete the full preflight before class. In particular, start the real database, download models, warm the splitter/tokenizer and models by seeding, and execute the integration suite. Check available disk space and ports 55432/58000. Distribute the whole track except `instructor/`, validation answer outputs if they expose solutions, and model caches; supply the model manifest separately if sharing cached weights under their licenses.
 
 ## Observable practice requirements

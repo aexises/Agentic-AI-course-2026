@@ -1,4 +1,5 @@
 from pathlib import Path
+import ast, copy
 import nbformat as nb
 root=Path(__file__).resolve().parents[1]
 source=(root/'labs/reference_support.py').read_text()
@@ -8,9 +9,54 @@ These corrected foundation notebooks retain the manual-loop and corrective-retri
 
 Use the course lab environment. Default runs make no API requests. All example facts are synthetic. These are worked foundation examples; Labs 5–8 contain the assessed implementation exercises.''')
 
+def scaffold(name, solution):
+ replacements = {
+ 'run': [
+  ('try:reply=llm(messages,stop=["Observation:"])', 'try:\n            raise NotImplementedError("TODO 3.3a: call llm with messages and the stop sequence")'),
+  ('observation=run_tool(name,args,tools)', 'raise NotImplementedError("TODO 3.3b: dispatch with the injected registry and save observation")')],
+ 'retrieve': [('q=set(re.findall(r"\\w+",query.lower()))', 'raise NotImplementedError("TODO 4.1a: tokenize the query into q")'),
+              ('return [dict(r) for score,_,r in nlargest(k,scored,key=lambda x:x[:2]) if score>0]', 'raise NotImplementedError("TODO 4.1b: return copied positive-overlap top-k records")')],
+ 'corrective_rag': [('decision=grader(question,docs)', 'raise NotImplementedError("TODO 4.2a: grade against the ORIGINAL question; save decision")'),
+                    ('if not valid_answer(answer,docs):', 'raise NotImplementedError("TODO 4.2b: reject invalid structured answers before the answered return")\n                if False:'),
+                    ('additions=searcher(query);validate_records(additions)', 'raise NotImplementedError("TODO 4.2c: search and validate additions before merging")')]
+ }
+ if name not in replacements:
+  return solution.split('\n')[0]+'\n    raise NotImplementedError("Implement '+name+' using the contract above")'
+ for old,new in replacements[name]:
+  assert old in solution,(name,old)
+  solution=solution.replace(old,new)
+ return solution
+
 def write(name,cells):
- n=nb.v4.new_notebook(cells=cells,metadata={'kernelspec':{'name':'python3','display_name':'Python 3','language':'python'},'language_info':{'name':'python'}})
- nb.validate(n);nb.write(n,root/'labs'/name)
+ targets = {'03': ['parse','run_tool','run'], '04': ['retrieve','corrective_rag']}[name[:2]]
+ parsed=ast.parse(source)
+ functions={n.name:ast.get_source_segment(source,n) for n in parsed.body if isinstance(n,ast.FunctionDef)}
+ # Keep only support relevant to this assignment, not the other lab's answers.
+ allowed = {'calculator','word_count'} if name.startswith('03') else {'normalize_search','search_and_scrape','validate_records','valid_answer'}
+ support=[]
+ for node in parsed.body:
+  if isinstance(node,(ast.Import,ast.ImportFrom)) or (isinstance(node,ast.FunctionDef) and node.name in allowed) or (name.startswith('03') and isinstance(node,(ast.Assign,ast.ClassDef))):
+   support.append(ast.get_source_segment(source,node) if not isinstance(node,ast.ClassDef) else '@dataclass\n'+ast.get_source_segment(source,node))
+ for solved in (False, True):
+  out=[copy.deepcopy(cells[0]),md("## Setup\nUse the Labs 3–8 environment. Implement the tasks below, set RUN_EXERCISES=True, restart and run all. Default execution does not solve or grade the assignment. All fixtures are invented. Instructor solutions are distributed separately."),code('RUN_EXERCISES = '+str(solved)),md('## Provided support\nThese utilities support the assignment; the agent/retrieval logic is your work.'),code('\n\n'.join(support))]
+  for name_ in targets:
+   signature=functions[name_].split('\n')[0]
+   contract = {
+    'parse':'Parse one Action: name[input] or Final Answer: text. Optionally allow a single leading Thought line as an observable protocol label, not a claim about hidden reasoning. Reject fabricated Observation lines, multiple actions, nonstrings, and messages longer than 10,000 characters. Return ("final", text), ("action", name, input), or ("error", None).',
+    'run_tool':'Use only the supplied registry. Bound string input at 10,000 characters, reject unknown tools, and return sanitized errors. Never execute a rejected request.',
+    'run':'Implement the model/tool loop. Validate a nonempty task of at most 10,000 characters and an integer max_steps in 1..32. Forward the Observation stop sequence, append actual observations to history, retain action traces, and return Result with final_answer, parse_error, model_error, or max_steps.',
+    'retrieve':'Return up to k copied records ranked by overlap of lowercase word tokens. Exclude zero-overlap records; resolve ties by input order. Validate nonnegative integer k. This is a lexical teaching baseline, not semantic retrieval.',
+    'corrective_rag':'Implement bounded retrieval, grading, rewrite/search repair, and abstention. Grade against the original question. Preserve source records and input nonmutation. Validate records and structured answers with citations before accepting them. A citation must identify retrieved evidence; membership is not entailment. Follow the helper contracts and failure tests.'}[name_]
+   out.extend([md('### TODO: '+name_+'\n'+contract),code(functions[name_] if solved else scaffold(name_, functions[name_]))])
+  # The original examples become checks gated on student implementations.
+  out.append(md('## Checks\nVisible checks are examples, not a complete grader. Add two normal and three failure cases.'))
+  for c in cells[3:]:
+   if c.cell_type=='code':out.append(code('if RUN_EXERCISES:\n'+'\n'.join('    '+line for line in c.source.splitlines())))
+   elif c.source.startswith('## Next Steps'):out.append(copy.deepcopy(c))
+  out.append(md('## Submission and rubric\nSubmit your implementation, test evidence, and a trace explanation. Implementation 50 points, added failure tests 25, trace and limitations 25. A default run with exercises disabled does not pass the lab. Do not import reference_support or instructor solutions to implement the tasks.'))
+  notebook=nb.v4.new_notebook(cells=out,metadata={'kernelspec':{'name':'python3','display_name':'Python 3','language':'python'},'language_info':{'name':'python'}})
+  for i,c in enumerate(notebook.cells):c.id=f'{name[:2]}-{i:03}'
+  nb.validate(notebook);nb.write(notebook,root/'labs'/('instructor' if solved else '')/name)
 
 write('03_react_tools_repaired.ipynb',[
 md('# Lab 3 · Repaired manual ReAct foundation\n\n## Goal\nTrace a bounded model/tool exchange and test dispatch independently of a provider.'),setup,code(source),

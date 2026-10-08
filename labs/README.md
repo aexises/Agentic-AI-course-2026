@@ -1,9 +1,13 @@
 # Agent engineering labs
 
-Four 90–120 minute labs extend the supplied AAI[sum26] Lab 3 (manual ReAct and native Gemini tools) and Lab 4 (corrective RAG). Numbering starts at 5 to preserve that progression. Durations are teaching estimates, not measured completion times.
+The required route is **Labs 3–16, then 18–20** (17 labs). [Lab 17](17_OPTIONAL_FINE_TUNING.md) is an optional fine-tuning project brief. Numbering preserves the AAI[sum26] reference sequence. Use the [6–8-hour self-study schedule](../teaching/SELF-STUDY-GUIDE.md). Durations are teaching estimates, not observed completion times.
+
+## Core assignments (Labs 3–8)
 
 | Notebook | Chapters | Student work | Estimated time |
 |---|---|---|---|
+| [3 · Manual ReAct](03_react_tools_repaired.ipynb) | 3, 5 | Parse protocol, dispatch, bounded loop | 90–120 min |
+| [4 · Corrective retrieval](04_corrective_rag_repaired.ipynb) | 6, 7 | Retrieval, repair, valid evidence-backed answers | 90–120 min |
 | [5 · Bounded Gemini tools](05_gemini_bounded_tools.ipynb) | 3, 5, 12 | Dispatch validation, complete native tool round-trip, budgets | 100 min |
 | [6 · Corrective RAG](06_langgraph_corrective_rag.ipynb) | 6, 7, 11 | Evidence grading, query repair, provenance, abstention | 110 min |
 | [7 · Agents SDK evaluation](07_agents_sdk_evaluation.ipynb) | 8, 10, 11 | Run metrics, paired counterfactuals, reviewer baseline | 120 min |
@@ -19,9 +23,13 @@ All notebook fixtures are invented. Offline results demonstrate software behavio
 
 [Labs 12–16](rag/README.md) use a real PostgreSQL/pgvector database, LlamaIndex ingestion, local embedding and reranking models, and FastAPI. They require a separate environment and the complete track folder. The capstone integrates the same pgvector stack, with optional backend portability afterward.
 
-## Repaired foundation examples
+## Engineering and optional extension
 
-[Lab 3 · Manual ReAct](03_react_tools_repaired.ipynb) and [Lab 4 · Corrective RAG](04_corrective_rag_repaired.ipynb) are worked, offline examples adapted from the audited AAI[sum26] contracts. Lab 3 respects injected tool registries and bounds arithmetic and loop execution. Lab 4 fixes the search-client constructor and response fields, retains source URLs, and tests correction and abstention. The original reference project remains untouched; distribute these course-local replacements. Lab 5 supplies the complete native Gemini tool round-trip.
+[Labs 18–20](engineering/README.md) add actual MCP tools, local Docker Compose, transactions, migrations, rollback, request logs and measured HTTP experiments. Use their separate environment and backend primer. Required deployment stays local; hosted CI and cloud are optional. [Optional Lab 17](17_OPTIONAL_FINE_TUNING.md) does not affect completion.
+
+## Repaired foundation assignments
+
+Labs 3–5 leave core implementation work to students. Lab 3 supplies calculator utilities but requires parser, dispatcher and loop work. Lab 4 supplies record validators but requires retrieval and corrective decisions. Lab 5 requires both dispatch validation and the native Gemini continuation. Small TODOs guide the longer functions. Separate instructor notebooks contain answers; the original reference project is unchanged.
 
 ## Local setup
 
@@ -43,18 +51,18 @@ For exact dependency replay on a compatible platform, install `labs/requirements
 
 ## Colab setup
 
-Upload one student `.ipynb` and `requirements.txt`. Each notebook is self-contained. Run `%pip install -r /content/requirements.txt` in a temporary setup cell, restart the runtime if needed, and run the notebook. Colab itself has not been tested here; its preinstalled packages may require a fresh runtime.
+Upload one student `.ipynb` and `requirements.txt`. Labs 3–8 notebooks are self-contained; other tracks require their complete support directories. Run `%pip install -r /content/requirements.txt` in a temporary setup cell, restart the runtime if needed, and run the notebook. Colab itself has not been tested here; its preinstalled packages may require a fresh runtime.
 
 ## Student workflow
 
-For assessed Labs 5–8:
+For assessed Labs 3–8:
 
-1. Run the notebook with `RUN_LIVE=False` and `RUN_EXERCISES=False` to inspect the worked examples.
+1. Run the notebook with `RUN_LIVE=False` and `RUN_EXERCISES=False` to inspect setup and provided scaffolding.
 2. Implement TODO functions; set `RUN_EXERCISES=True`; restart the kernel and run all cells.
 3. Add the requested edge cases and complete the report in a Markdown cell.
 4. Optionally enable live inference after configuring a model and key. Never submit credentials.
 
-Instructor solution copies are in [instructor/](instructor/). They enable exercise checks. Distribute student copies without the instructor folder. The solutions are reference implementations, not a hidden or exhaustive grader.
+Instructor solution copies are in [instructor/](instructor/). They enable exercise checks. Distribute student copies without instructor folders, reference_support.py, build scripts, or executed instructor validation copies. The solutions are reference implementations, not a hidden or exhaustive grader.
 
 ## Optional live Gemini setup
 
@@ -81,6 +89,6 @@ python scripts/validate-labs.py
 python -m pytest tests -q
 ```
 
-The notebook runner uses a fresh kernel per notebook and records executed copies and hashes in `improvements/validation/`. Student TODO checks are intentionally disabled in the default copies; instructor copies execute them. See [validation notes](../improvements/VALIDATION.md) for tested scope and remaining live checks.
+The notebook runner uses a fresh kernel per notebook and records executed copies and hashes in `improvements/validation/`. Student TODO checks are intentionally disabled in the default copies; instructor copies execute them. See [current revision checks](../improvements/COURSE-REVISION-2026-10-08.md) and the earlier [validation notes](../improvements/VALIDATION.md) for tested scope and remaining live checks.
 
 The separate [evaluation runner](../evaluation/README.md) adds persistent manifests, failure accounting, request caps, and development/assessment split handling. The [instructor guide](../teaching/INSTRUCTOR-GUIDE.md) explains classroom use.

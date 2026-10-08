@@ -7,6 +7,8 @@ from jupyter_client.kernelspec import KernelSpecManager
 
 root=Path(__file__).resolve().parents[1]
 results=[]
+for key in ('GEMINI_API_KEY','GOOGLE_API_KEY','OPENAI_API_KEY','TAVILY_API_KEY'):
+    os.environ.pop(key,None)
 with tempfile.TemporaryDirectory(prefix='lab-kernels-') as tmp:
     kernel=Path(tmp)/'course-validation'
     kernel.mkdir()
@@ -28,6 +30,6 @@ with tempfile.TemporaryDirectory(prefix='lab-kernels-') as tmp:
         nbformat.write(notebook,dest)
         results.append({'notebook':str(path.relative_to(root)),'status':'passed','sha256':hashlib.sha256(path.read_bytes()).hexdigest(),
                         'code_cells':sum(c.cell_type=='code' for c in notebook.cells),'live_api':'not run',
-                        'exercises':('executed' if path.parent.name=='instructor' else 'worked foundation checks' if path.name.startswith(('03_','04_')) else 'intentionally disabled')})
+                        'exercises':('executed' if path.parent.name=='instructor'  else 'intentionally disabled')})
         print('PASS',path.relative_to(root),flush=True)
 (root/'improvements'/'validation'/'notebook-results.json').write_text(json.dumps({'python':sys.version,'results':results},indent=2)+'\n')

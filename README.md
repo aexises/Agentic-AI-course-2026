@@ -2,6 +2,8 @@
 
 The current studybook is a full textbook in [Markdown](STUDYBOOK.md) and [LaTeX source](textbook/latex/main.tex). See [textbook build instructions](textbook/README.md). It replaces the earlier conspect; the existing Word/PDF files remain the prior concise edition.
 
+Start with the [self-study guide](teaching/SELF-STUDY-GUIDE.md): an 18-week planning route at 6–8 hours weekly, with extra backend and deployment support. Labs 3–5 are unsolved assignments; Labs 18–20 add MCP, local delivery and observability. The [capstone](teaching/CAPSTONE.md) distinguishes offline completion from advanced live assessment.
+
 ## What is included
 
 - [STUDYBOOK.md](STUDYBOOK.md) - the complete textbook with linked citations and selected answers
@@ -59,9 +61,12 @@ Presentation sources remain in `presentations/src/`. Their build process is sepa
 - [Course improvement plan](improvements/COURSE-IMPROVEMENT-PLAN.md): prioritized weaknesses and a chapter-by-chapter implementation plan.
 - [Research update](improvements/RESEARCH-UPDATE.md): recent OpenAI and Anthropic papers/posts, checked 9 September 2026.
 - [Claim ledger](improvements/CLAIM-LEDGER.md): source, support, and scope checks.
-- [Student labs](labs/README.md): four notebooks using LangGraph, Gemini, and the OpenAI Agents SDK, with separate instructor solutions.
+- [Student labs](labs/README.md): the complete assignment index, including repaired Labs 3–5 and separate instructor solutions.
 - [Current framework labs](labs/frameworks/README.md): three additional labs on LangGraph parallel workflows, LangChain middleware, and PydanticAI typed agents, checked 6 October 2026.
 - [Practical RAG and FastAPI labs](labs/rag/README.md): Labs 12–16 build LlamaIndex ingestion, pgvector indexes, hybrid retrieval, neural reranking, and an HTTP service.
+- [Engineering labs](labs/engineering/README.md): Labs 18–20 teach MCP, approval boundaries, Docker Compose, migrations, rollback and measurement.
+- [Optional fine-tuning brief](labs/17_OPTIONAL_FINE_TUNING.md): Lab 17 is outside the required path.
+- [Current revision validation](improvements/COURSE-REVISION-2026-10-08.md): exact checks and remaining limitations.
 - [Validation notes](improvements/VALIDATION.md): offline execution evidence and remaining live API checks.
 
 The dated research update remains in the companion decks and prior Word/PDF conspect. The current textbook develops all 13 topics in continuous prose, with worked examples, exercises, and a separate scholarly bibliography.

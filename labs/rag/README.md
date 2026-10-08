@@ -1,5 +1,7 @@
 # Practical RAG engineering: Labs 12–16
 
+This required track leads into [MCP and local operation Labs 18–20](../engineering/README.md). Read the [backend primer](../engineering/BACKEND-PRIMER.md) before the service exercises. The final [capstone](../../teaching/CAPSTONE.md) integrates pgvector retrieval with an approved action service; fine-tuning is optional.
+
 Build one working application across five labs: **LlamaIndex → embeddings → PostgreSQL/pgvector → hybrid retrieval → neural reranking → FastAPI**. The required database is pgvector. Milvus/Pinecone remain an optional portability extension in Lab 16, so the core sequence gives students repeated practice with PostgreSQL and FastAPI.
 
 | Lab | Students actually implement | Deliverable |

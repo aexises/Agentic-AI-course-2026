@@ -1,5 +1,7 @@
 # Current framework practice: Labs 9–11
 
+This is the Labs 9–11 track in the current [course route](../../teaching/SELF-STUDY-GUIDE.md). Continue with [RAG/FastAPI Labs 12–16](../rag/README.md), then [engineering Labs 18–20](../engineering/README.md). Lab 17 is optional; the final capstone has offline and advanced live outcomes.
+
 Three additional Python labs teach framework APIs through executable examples, implementation tasks, failure injection, and short design reports. They extend Labs 5–8 rather than replace them. Each has a student notebook and a separate instructor solution. Planned duration is 110 minutes per lab; this has not been measured in a student pilot.
 
 | Lab | Concrete framework work | Textbook chapters |

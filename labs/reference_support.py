@@ -106,18 +106,51 @@ def search_and_scrape(query,api_key,client_factory,max_urls=2):
 
 def retrieve(query,records,k=3):
     if type(k) is not int or k<0:raise ValueError("invalid k")
+    if not isinstance(query,str) or not query.strip():raise ValueError("invalid query")
+    validate_records(records)
     q=set(re.findall(r"\w+",query.lower()))
     scored=((len(q & set(re.findall(r"\w+",r["text"].lower()))),-i,r) for i,r in enumerate(records))
     return [dict(r) for score,_,r in nlargest(k,scored,key=lambda x:x[:2]) if score>0]
 
+def validate_records(records):
+    if not isinstance(records,list):raise ValueError("records must be a list")
+    seen=set()
+    for row in records:
+        if not isinstance(row,dict) or any(not isinstance(row.get(k),str) or not row[k].strip() for k in ('id','source','text')):
+            raise ValueError("invalid evidence record")
+        if row['id'] in seen:raise ValueError("duplicate evidence ID")
+        seen.add(row['id'])
+
+def valid_answer(answer,docs):
+    if not isinstance(answer,dict) or set(answer)!={'text','citations'}:return False
+    citations=answer['citations']
+    return (isinstance(answer['text'],str) and bool(answer['text'].strip())
+            and isinstance(citations,list) and bool(citations)
+            and all(isinstance(c,str) for c in citations)
+            and len(citations)==len(set(citations))
+            and set(citations)<={d['id'] for d in docs})
+
 def corrective_rag(question,records,grader,rewriter,searcher,answerer,max_steps=3):
     if type(max_steps) is not int or not 1<=max_steps<=5:raise ValueError("max_steps must be 1..5")
+    if not isinstance(question,str) or not question.strip():raise ValueError("invalid question")
+    validate_records(records)
     corpus={r['id']:dict(r) for r in records};query=question;trace=[]
     for step in range(max_steps):
         docs=retrieve(query,list(corpus.values()))
         trace.append({"query":query,"retrieved_ids":[d['id'] for d in docs]})
-        if docs and grader(question,docs):return {"answer":answerer(question,docs),"trace":trace,"status":"answered"}
+        if docs:
+            decision=grader(question,docs)
+            if type(decision) is not bool:raise ValueError("grader must return bool")
+            if decision:
+                answer=answerer(question,docs)
+                if not valid_answer(answer,docs):
+                    return {"answer":None,"trace":trace,"status":"invalid_answer"}
+                return {"answer":answer,"trace":trace,"status":"answered"}
         if step+1<max_steps:
             query=rewriter(question)
-            for r in searcher(query):corpus[r['id']]=dict(r)
+            if not isinstance(query,str) or not query.strip():raise ValueError("invalid rewritten query")
+            additions=searcher(query);validate_records(additions)
+            for r in additions:
+                if r['id'] in corpus and corpus[r['id']]!=r:raise ValueError("conflicting evidence ID")
+                corpus[r['id']]=dict(r)
     return {"answer":"Insufficient evidence.","trace":trace,"status":"abstained"}

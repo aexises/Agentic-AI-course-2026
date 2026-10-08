@@ -4,23 +4,23 @@
     {
       "notebook": "labs/03_react_tools_repaired.ipynb",
       "status": "passed",
-      "sha256": "d390ea326033c07675159bb17500b2e8f96284e5ca326e47010f188dc8f07d16",
-      "code_cells": 3,
+      "sha256": "ac02527b43034666e67039e34956ff4d57ca68819eb2fb52ccdbcdb6deed10fc",
+      "code_cells": 7,
       "live_api": "not run",
-      "exercises": "worked foundation checks"
+      "exercises": "intentionally disabled"
     },
     {
       "notebook": "labs/04_corrective_rag_repaired.ipynb",
       "status": "passed",
-      "sha256": "459897b307c54998663169517e2abc6db093395d727ddea4604760084664e1f6",
-      "code_cells": 3,
+      "sha256": "582ddf56ff0726d2e5f54a424d3510c1ee02f02eb4a02bca8fd2a221fc7a54e2",
+      "code_cells": 6,
       "live_api": "not run",
-      "exercises": "worked foundation checks"
+      "exercises": "intentionally disabled"
     },
     {
       "notebook": "labs/05_gemini_bounded_tools.ipynb",
       "status": "passed",
-      "sha256": "6972442c4c393c09ef31028fd505160b1e074bb0f93713fb714cfc2e95d522f8",
+      "sha256": "1f78310f981708b2896854cb3dc0bf95bb89fcffc0e1a8f556cd92de3db37d82",
       "code_cells": 7,
       "live_api": "not run",
       "exercises": "intentionally disabled"
@@ -50,9 +50,25 @@
       "exercises": "intentionally disabled"
     },
     {
+      "notebook": "labs/instructor/03_react_tools_repaired.ipynb",
+      "status": "passed",
+      "sha256": "3915a6f25cacc83cae052fc7993b913c038cb5c42e1f7664e19896033fd54204",
+      "code_cells": 7,
+      "live_api": "not run",
+      "exercises": "executed"
+    },
+    {
+      "notebook": "labs/instructor/04_corrective_rag_repaired.ipynb",
+      "status": "passed",
+      "sha256": "97e87661a3906eefd9899322f74512bbc32d26b42605c89b087b0891b355af27",
+      "code_cells": 6,
+      "live_api": "not run",
+      "exercises": "executed"
+    },
+    {
       "notebook": "labs/instructor/05_gemini_bounded_tools.ipynb",
       "status": "passed",
-      "sha256": "f2013f9da3c2c8b09839697f39cbf35dd94ae88b6220f9f8f7d8207d3b58f6bc",
+      "sha256": "a76898f62e13bbf1d80dbcdb741212558143a252a9c46a0d5bb3b99d02a47510",
       "code_cells": 7,
       "live_api": "not run",
       "exercises": "executed"

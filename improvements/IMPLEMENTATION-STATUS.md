@@ -1,3 +1,11 @@
+# Current status — 8 October 2026
+
+The required course now includes Labs 3–16 and 18–20, with optional fine-tuning Lab 17. Labs 3–5 have unsolved guided exercises. New backend support and a 6–8-hour self-study route serve the first learner. The capstone separates offline completion and advanced live assessment. See [current revision evidence](COURSE-REVISION-2026-10-08.md) and the [course guide](../teaching/SELF-STUDY-GUIDE.md).
+
+The previous status below is historical: its dates, counts and pending items describe the earlier revision.
+
+---
+
 # Implementation status — 9 September 2026
 
 **Edition note:** This record describes the earlier integrated conspect and lab release. The subsequent full textbook is delivered as Markdown/LaTeX; see [textbook validation](../textbook/VALIDATION.md). The existing 52-page PDF is the earlier conspect, not a compiled version of the new textbook.

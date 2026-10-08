@@ -1,0 +1,10 @@
+# Isolated environment; resolved 2026-10-08 on Python 3.12.
+mcp==2.3.0
+fastapi==0.143.0
+uvicorn==0.54.0
+httpx==0.28.1
+nbformat==5.11.1
+nbclient==0.11.0
+ipykernel==7.4.0
+pytest==9.1.1
+google-genai==2.29.0

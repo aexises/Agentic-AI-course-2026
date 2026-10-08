@@ -2,14 +2,14 @@
   "edition": "2026-09-09-textbook",
   "chapters": 13,
   "chapter_words": 18358,
-  "instructional_words": 22323,
+  "instructional_words": 22397,
   "references": 35,
   "exercises": 65,
   "latex_compiled": false,
   "sources": [
     {
       "path": "textbook/preface.md",
-      "sha256": "74d96d1918e954fdb663b9c72b623ba1eb80c4b57d229f2d354c11afc70fb340"
+      "sha256": "1ae2b8fae5caecfa7ad5aabee2887e4b4290f88134fc3dd29f785831915ad867"
     },
     {
       "path": "chapters/01-introduction.md",

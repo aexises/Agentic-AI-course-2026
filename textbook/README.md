@@ -1,5 +1,7 @@
 # Textbook source edition
 
+For the current practical sequence, use the [self-study guide](../teaching/SELF-STUDY-GUIDE.md) and [lab index](../labs/README.md): Labs 3–16 and 18–20 are required, Lab 17 optional. The textbook explains the foundations; track guides carry version-specific installation and assignment instructions.
+
 The course is now written as a textbook, with a continuous equipment-service case, explanations, worked derivations, 65 chapter exercises, selected answers, and a 35-entry cited bibliography. The main narrative covers all thirteen course topics. Mathematical foundations and an end-to-end case provide additional support.
 
 ## Read or compile

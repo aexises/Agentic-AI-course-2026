@@ -158,6 +158,24 @@ else:
 4. Report a live trace if available, or clearly label offline-only evidence; explain what remains untested (20 points).
 
 Answer here. Do not submit API keys. Native tool support does not remove authorization or validation responsibilities. This exercise extends the incomplete manual round-trip in the reference Lab 3; it does not reproduce a research benchmark.''')]
+# Core protocol implementation is an assessed task, not a supplied solution.
+for i, cell in enumerate(cells):
+    if isinstance(cell, dict) and cell.get('cell_type') == 'code' and 'def native_loop(' in cell.source:
+        stub = cell.source
+        start = stub.index('        response=client.models.generate_content')
+        end = stub.index('        if not response.candidates', start)
+        stub = stub[:start] + '        raise NotImplementedError("TODO 5.2a: request content with tools and automatic calling disabled")\n' + stub[end:]
+        stub = stub.replace('        if len(trace)+len(calls)>max_calls:', '        raise NotImplementedError("TODO 5.2b: preflight the whole call batch against the remaining budget")\n        if False:')
+        start = stub.index('            result=dispatcher(')
+        end = stub.index('        history.append(types.Content', start)
+        stub = stub[:start] + '            raise NotImplementedError("TODO 5.2c: dispatch, trace, and append response Part with matching call ID")\n' + stub[end:]
+        cells[i] = {'stub': stub, 'solution': cell.source}
+    elif isinstance(cell, dict) and cell.get('cell_type') == 'code' and 'class FakeGemini:' in cell.source:
+        cells[i] = code('if RUN_EXERCISES:\n'+'\n'.join('    '+line for line in cell.source.splitlines()))
+    elif isinstance(cell, dict) and cell.get('cell_type') == 'markdown' and '### 3. Complete the native protocol' in cell.source:
+        cells[i] = md("### 3. TODO: implement the native protocol (35 points)\nImplement native_loop using client.models.generate_content and Google GenAI Content/Part types. Disable automatic function calling; declare arithmetic and max_output_tokens=1024. Preserve the complete model content when returning function responses, including call IDs. Execute calls sequentially through the injected dispatcher. Preflight each batch against the remaining call budget. Validate integer max_rounds in 1..8 and max_calls in 0..8. Return status, trace, and an answer for final text. Ignore thought text. Handle absent candidates/content and empty final text explicitly. Trace records contain call_id, tool, and result. Return round_budget or call_budget when appropriate. Read the official Gemini function-calling documentation. This is a manual generate_content exercise for the pinned SDK, not an exercise in automatic tool execution.")
+    elif isinstance(cell, dict) and cell.get('cell_type') == 'markdown' and '1. Dispatch implementation' in cell.source:
+        cells[i] = md("## Submission and rubric\nDispatch 35 points; native_loop 35; added tests for empty/truncated responses, parallel calls, invalid arguments, and tool failures 20; evidence and explanation 10. Student code must implement both functions. A default run is setup only. Live traces require your own explicitly configured account; label fixture-only evidence accurately.")
 save('05_gemini_bounded_tools',cells)
 
 cells=[md('''# Lab 6 · Corrective retrieval with LangGraph

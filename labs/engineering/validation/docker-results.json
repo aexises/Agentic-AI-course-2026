@@ -1,0 +1,21 @@
+{
+  "scope": "instructor implementation in isolated temporary build context",
+  "checks": [
+    "v1 image build and readiness",
+    "denial before approval",
+    "approved create and identical replay",
+    "additive migration repeated",
+    "v2 replacement preserves ticket",
+    "rollback to v1 compatible with migrated schema",
+    "new insert after rollback",
+    "real request ID correlated with template-route JSON log"
+  ],
+  "migration_schema": "[(0, 'tenant', 'TEXT', 1, None, 1), (1, 'operation_id', 'TEXT', 1, None, 2), (2, 'payload', 'TEXT', 1, None, 0), (3, 'ticket_id', 'TEXT', 1, None, 0), (4, 'created_by', 'TEXT', 1, \"'legacy'\", 0)]\n",
+  "images": [
+    "sha256:09a1c8f0eb127ba3c76c83b682ca5e0debdf11cbc87368c9c2801e2a3eadecae",
+    "sha256:bb5f36a4eb31df3b1608c87c8a692e16c0e44da654e47668bcb639533777c5df"
+  ],
+  "note": "v1/v2 use the same business implementation with different release metadata; gate contract tested separately; no broken application image deployed",
+  "status": "passed",
+  "cleanup": "validation stack stopped; course-engineering-validation_ticket-data volume retained"
+}

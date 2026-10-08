@@ -1,5 +1,7 @@
 # Evaluation runner
 
+This runner is a component exercise, not the entire final assessment. See the [current capstone](../teaching/CAPSTONE.md): offline completion requires real local services; advanced assessment additionally requires live provider evidence. Fixture success alone does not satisfy the latter.
+
 Run from the course root in the lab environment:
 
 ```bash

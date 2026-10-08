@@ -1,0 +1,9 @@
+instructor/
+validation/
+*.ipynb
+.env
+student-results/
+**/__pycache__/
+.venv/
+.git/
+.pytest_cache/

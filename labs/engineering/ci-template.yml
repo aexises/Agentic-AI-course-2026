@@ -1,0 +1,20 @@
+# Optional: copy into .github/workflows/ in your own repository after solving TODOs.
+name: engineering-lab-contracts
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: labs/engineering
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - run: python -m pytest tests -q
+      - run: docker compose build
+# No hosted run, registry push, cloud deployment, or secret configuration is implied.

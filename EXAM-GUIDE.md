@@ -1,5 +1,7 @@
 # Exam Preparation Guide
 
+Use this conceptual review alongside the [current self-study route](teaching/SELF-STUDY-GUIDE.md). Practical completion also requires Labs 3–16 and 18–20 and the [capstone](teaching/CAPSTONE.md). Lab 17 is optional. Backend, deployment and observability are assessed through runnable evidence.
+
 ## Six comparisons to master
 
 | Compare | Essential distinction |
