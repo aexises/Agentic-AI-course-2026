@@ -1,0 +1,7 @@
+.env
+models/
+.cache/
+__pycache__/
+.pytest_cache/
+*.egg-info/
+student-results/

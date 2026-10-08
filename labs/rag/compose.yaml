@@ -1,0 +1,19 @@
+name: course-rag
+services:
+  db:
+    image: pgvector/pgvector:0.8.1-pg17
+    environment:
+      POSTGRES_USER: course
+      POSTGRES_PASSWORD: course-local-only
+      POSTGRES_DB: rag_course
+    ports:
+      - "127.0.0.1:55432:5432"
+    volumes:
+      - course_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U course -d rag_course"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+volumes:
+  course_data:

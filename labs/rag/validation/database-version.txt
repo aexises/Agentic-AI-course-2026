@@ -1,0 +1,2 @@
+PostgreSQL 17.8 (Debian 17.8-1.pgdg12+1) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit
+0.8.1

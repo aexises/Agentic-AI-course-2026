@@ -1,0 +1,14 @@
+services:
+  api:
+    build: .
+    environment:
+      RAG_DATABASE_URL: postgresql://course:course-local-only@db:5432/rag_course
+      RAG_API_KEYS: '{"student-alpha":"alpha","student-beta":"beta"}'
+      RAG_MODEL_DIR: /models
+    volumes:
+      - ./models:/models:ro
+    ports:
+      - "127.0.0.1:58000:8000"
+    depends_on:
+      db:
+        condition: service_healthy

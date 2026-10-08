@@ -61,6 +61,7 @@ Presentation sources remain in `presentations/src/`. Their build process is sepa
 - [Claim ledger](improvements/CLAIM-LEDGER.md): source, support, and scope checks.
 - [Student labs](labs/README.md): four notebooks using LangGraph, Gemini, and the OpenAI Agents SDK, with separate instructor solutions.
 - [Current framework labs](labs/frameworks/README.md): three additional labs on LangGraph parallel workflows, LangChain middleware, and PydanticAI typed agents, checked 6 October 2026.
+- [Practical RAG and FastAPI labs](labs/rag/README.md): Labs 12–16 build LlamaIndex ingestion, pgvector indexes, hybrid retrieval, neural reranking, and an HTTP service.
 - [Validation notes](improvements/VALIDATION.md): offline execution evidence and remaining live API checks.
 
 The dated research update remains in the companion decks and prior Word/PDF conspect. The current textbook develops all 13 topics in continuous prose, with worked examples, exercises, and a separate scholarly bibliography.

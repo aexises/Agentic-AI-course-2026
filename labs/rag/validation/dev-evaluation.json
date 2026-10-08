@@ -1,0 +1,301 @@
+{
+  "utc_time": "2026-10-08T02:54:39.799291+00:00",
+  "split": "dev",
+  "python": "3.12.14",
+  "packages": {
+    "llama-index-core": "0.14.25",
+    "pgvector": "0.5.0",
+    "psycopg": "3.3.6",
+    "sentence-transformers": "6.1.0",
+    "fastapi": "0.142.4"
+  },
+  "corpus_sha256": "342a224aa4f136b77e807f8c7da3af6a9a8b90c0e562c1bf7bab4af3425a1393",
+  "models": {
+    "encoder": {
+      "repository": "sentence-transformers/all-MiniLM-L6-v2",
+      "revision": "c9745ed1d9f207416be6d2e6f8de32d1f16199bf"
+    },
+    "reranker": {
+      "repository": "cross-encoder/ms-marco-MiniLM-L6-v2",
+      "revision": "233902d25c440f23af6f7d6e94d2946bac0bee0a"
+    }
+  },
+  "rows": [
+    {
+      "question": "q01",
+      "mode": "lexical",
+      "milliseconds": 5.287250009132549,
+      "retrieved_documents": [],
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0
+    },
+    {
+      "question": "q01",
+      "mode": "dense",
+      "milliseconds": 5945.292458025506,
+      "retrieved_documents": [
+        "camera-loans",
+        "camera-extension",
+        "late-return",
+        "battery-guide",
+        "tripod-loans"
+      ],
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0
+    },
+    {
+      "question": "q01",
+      "mode": "hybrid",
+      "milliseconds": 15.088084008311853,
+      "retrieved_documents": [
+        "camera-loans",
+        "camera-extension",
+        "late-return",
+        "battery-guide",
+        "tripod-loans"
+      ],
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0
+    },
+    {
+      "question": "q01",
+      "mode": "hybrid+rerank",
+      "milliseconds": 647.9701669886708,
+      "retrieved_documents": [
+        "camera-loans",
+        "camera-extension",
+        "tripod-loans",
+        "audio-loans",
+        "battery-guide"
+      ],
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0
+    },
+    {
+      "question": "q02",
+      "mode": "lexical",
+      "milliseconds": 6.8417079746723175,
+      "retrieved_documents": [],
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0
+    },
+    {
+      "question": "q02",
+      "mode": "dense",
+      "milliseconds": 20.28962501208298,
+      "retrieved_documents": [
+        "camera-extension",
+        "camera-loans",
+        "battery-guide",
+        "audio-loans",
+        "booking-limit"
+      ],
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0
+    },
+    {
+      "question": "q02",
+      "mode": "hybrid",
+      "milliseconds": 15.175000007729977,
+      "retrieved_documents": [
+        "camera-extension",
+        "camera-loans",
+        "battery-guide",
+        "audio-loans",
+        "booking-limit"
+      ],
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0
+    },
+    {
+      "question": "q02",
+      "mode": "hybrid+rerank",
+      "milliseconds": 70.03004100988619,
+      "retrieved_documents": [
+        "camera-extension",
+        "battery-guide",
+        "camera-loans",
+        "tripod-loans",
+        "audio-loans"
+      ],
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0
+    },
+    {
+      "question": "q03",
+      "mode": "lexical",
+      "milliseconds": 4.916292004054412,
+      "retrieved_documents": [
+        "projector-error"
+      ],
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0
+    },
+    {
+      "question": "q03",
+      "mode": "dense",
+      "milliseconds": 9.878540993668139,
+      "retrieved_documents": [
+        "projector-error",
+        "accessibility",
+        "lost-equipment",
+        "projector-loans",
+        "booking-limit"
+      ],
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0
+    },
+    {
+      "question": "q03",
+      "mode": "hybrid",
+      "milliseconds": 13.246792019344866,
+      "retrieved_documents": [
+        "projector-error",
+        "accessibility",
+        "lost-equipment",
+        "projector-loans",
+        "booking-limit"
+      ],
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0
+    },
+    {
+      "question": "q03",
+      "mode": "hybrid+rerank",
+      "milliseconds": 72.56916598998941,
+      "retrieved_documents": [
+        "projector-error",
+        "battery-guide",
+        "booking-limit",
+        "lost-equipment",
+        "camera-extension"
+      ],
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0
+    },
+    {
+      "question": "q04",
+      "mode": "lexical",
+      "milliseconds": 3.387832985026762,
+      "retrieved_documents": [
+        "camera-loans",
+        "opening-hours"
+      ],
+      "recall": 1.0,
+      "mrr": 0.5,
+      "ndcg": 0.6309297535714575
+    },
+    {
+      "question": "q04",
+      "mode": "dense",
+      "milliseconds": 16.988124989438802,
+      "retrieved_documents": [
+        "opening-hours",
+        "lost-equipment",
+        "late-return",
+        "audio-loans",
+        "camera-extension"
+      ],
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0
+    },
+    {
+      "question": "q04",
+      "mode": "hybrid",
+      "milliseconds": 13.354624999919906,
+      "retrieved_documents": [
+        "opening-hours",
+        "camera-loans",
+        "lost-equipment",
+        "late-return",
+        "audio-loans"
+      ],
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0
+    },
+    {
+      "question": "q04",
+      "mode": "hybrid+rerank",
+      "milliseconds": 74.2804579786025,
+      "retrieved_documents": [
+        "opening-hours",
+        "camera-loans",
+        "late-return",
+        "lost-equipment",
+        "camera-extension"
+      ],
+      "recall": 1.0,
+      "mrr": 1.0,
+      "ndcg": 1.0
+    },
+    {
+      "question": "q05",
+      "mode": "lexical",
+      "milliseconds": 2.8242500266060233,
+      "retrieved_documents": [],
+      "recall": 0.0,
+      "mrr": 0.0,
+      "ndcg": 0.0
+    },
+    {
+      "question": "q05",
+      "mode": "dense",
+      "milliseconds": 13.978292001411319,
+      "retrieved_documents": [
+        "audio-loans",
+        "lost-equipment",
+        "camera-loans",
+        "late-return",
+        "charging"
+      ],
+      "recall": 1.0,
+      "mrr": 0.5,
+      "ndcg": 0.6309297535714575
+    },
+    {
+      "question": "q05",
+      "mode": "hybrid",
+      "milliseconds": 14.12233299924992,
+      "retrieved_documents": [
+        "audio-loans",
+        "lost-equipment",
+        "camera-loans",
+        "late-return",
+        "charging"
+      ],
+      "recall": 1.0,
+      "mrr": 0.5,
+      "ndcg": 0.6309297535714575
+    },
+    {
+      "question": "q05",
+      "mode": "hybrid+rerank",
+      "milliseconds": 139.76812499458902,
+      "retrieved_documents": [
+        "audio-loans",
+        "privacy",
+        "charging",
+        "lost-equipment",
+        "battery-guide"
+      ],
+      "recall": 1.0,
+      "mrr": 0.25,
+      "ndcg": 0.43067655807339306
+    }
+  ],
+  "limitations": "Small invented English corpus; observed timings include cold starts and are not service-load benchmarks. Public test questions are not secret assessment data. No relevant-document queries have null relevance metrics."
+}

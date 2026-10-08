@@ -1,0 +1,138 @@
+[
+  {
+    "tenant": "alpha",
+    "doc_id": "camera-loans",
+    "version": 1,
+    "title": "Camera loans",
+    "body": "Cameras can be borrowed for three days. Bring a valid student card to collect the camera. Overnight loans count toward the three-day period. Return the camera to the media desk before closing.",
+    "source": "course://alpha/camera-loans"
+  },
+  {
+    "tenant": "alpha",
+    "doc_id": "camera-extension",
+    "version": 1,
+    "title": "Camera extensions",
+    "body": "Camera loans can be extended by two days only if another student has not reserved the equipment. Request an extension before the original due date. The media desk must approve an extension; submitting a request does not automatically extend a loan.",
+    "source": "course://alpha/camera-extension"
+  },
+  {
+    "tenant": "alpha",
+    "doc_id": "audio-loans",
+    "version": 1,
+    "title": "Audio recorders",
+    "body": "Portable sound recorders are available for interviews. An audio recorder may be borrowed for seven days. A microphone can be requested with the recorder. Check the battery before leaving the desk.",
+    "source": "course://alpha/audio-loans"
+  },
+  {
+    "tenant": "alpha",
+    "doc_id": "tripod-loans",
+    "version": 1,
+    "title": "Tripods",
+    "body": "Tripods may be borrowed for five days. Tripods must be returned with their mounting plate. A missing mounting plate should be reported at the desk.",
+    "source": "course://alpha/tripod-loans"
+  },
+  {
+    "tenant": "alpha",
+    "doc_id": "projector-error",
+    "version": 1,
+    "title": "Projector troubleshooting",
+    "body": "Error E-204 on the Orion projector means the air filter needs cleaning. Disconnect power before maintenance. Only authorized technicians should open the housing. A flashing battery indicator is not error E-204.",
+    "source": "course://alpha/projector-error"
+  },
+  {
+    "tenant": "alpha",
+    "doc_id": "projector-loans",
+    "version": 1,
+    "title": "Projector loans",
+    "body": "Projectors can be checked out for classroom presentations lasting one day. Obtain an instructor approval email before checkout. Weekend projector loans require a separate written approval.",
+    "source": "course://alpha/projector-loans"
+  },
+  {
+    "tenant": "alpha",
+    "doc_id": "battery-guide",
+    "version": 1,
+    "title": "Camera battery",
+    "body": "The Orion camera battery lasts approximately eight hours under the fictional standard test conditions used in this course. Cold weather and continuous recording can reduce runtime. A spare battery may be requested at checkout.",
+    "source": "course://alpha/battery-guide"
+  },
+  {
+    "tenant": "alpha",
+    "doc_id": "opening-hours",
+    "version": 1,
+    "title": "Desk opening hours",
+    "body": "The media desk opens at 09:00 and closes at 17:00 Monday through Friday. It is closed on weekends. Return lockers remain accessible after closing, but equipment must be placed in a labeled protective case.",
+    "source": "course://alpha/opening-hours"
+  },
+  {
+    "tenant": "alpha",
+    "doc_id": "accessibility",
+    "version": 1,
+    "title": "Accessible equipment",
+    "body": "Students may request accessible controls and lightweight tripods. Contact the accessibility coordinator to arrange a demonstration. No medical documentation should be uploaded to the equipment reservation form.",
+    "source": "course://alpha/accessibility"
+  },
+  {
+    "tenant": "alpha",
+    "doc_id": "lost-equipment",
+    "version": 1,
+    "title": "Lost equipment",
+    "body": "Report lost equipment to the media desk immediately. Include the asset identifier and last known location. Do not send passwords or payment card information. Staff will explain the replacement review process.",
+    "source": "course://alpha/lost-equipment"
+  },
+  {
+    "tenant": "alpha",
+    "doc_id": "reservation-cancel",
+    "version": 1,
+    "title": "Cancel reservations",
+    "body": "A reservation can be canceled before pickup. Cancel through the student portal. Canceling a reservation does not cancel an already active loan or erase its return deadline.",
+    "source": "course://alpha/reservation-cancel"
+  },
+  {
+    "tenant": "alpha",
+    "doc_id": "privacy",
+    "version": 1,
+    "title": "Recording consent",
+    "body": "Obtain permission before recording identifiable people. Course recordings must be stored in the approved student workspace. Do not publish recordings through a public link without the relevant permission.",
+    "source": "course://alpha/privacy"
+  },
+  {
+    "tenant": "alpha",
+    "doc_id": "firmware",
+    "version": 1,
+    "title": "Firmware maintenance",
+    "body": "Firmware updates must be performed by media technicians. Students must not install unofficial firmware on loan equipment. Report suspected firmware issues with the asset identifier.",
+    "source": "course://alpha/firmware"
+  },
+  {
+    "tenant": "alpha",
+    "doc_id": "charging",
+    "version": 1,
+    "title": "Charging rules",
+    "body": "Use the charger supplied with the device. Disconnect a charger with visible damage and report it. Do not leave charging devices in locked, unventilated storage.",
+    "source": "course://alpha/charging"
+  },
+  {
+    "tenant": "alpha",
+    "doc_id": "booking-limit",
+    "version": 1,
+    "title": "Booking limits",
+    "body": "Students can hold at most two active equipment reservations. The limit covers reservations, not individual accessories. An instructor can request an exception through the media desk.",
+    "source": "course://alpha/booking-limit"
+  },
+  {
+    "tenant": "alpha",
+    "doc_id": "late-return",
+    "version": 1,
+    "title": "Late returns",
+    "body": "If a return will be late, contact the media desk before the due time. A late-return report is not an approved extension. Repeated late returns may lead to a manual review of borrowing access.",
+    "source": "course://alpha/late-return"
+  },
+  {
+    "tenant": "beta",
+    "doc_id": "private-policy",
+    "version": 1,
+    "title": "Private beta policy",
+    "body": "BETA-ONLY-MARKER: the beta studio permits camera loans for fourteen days. This policy belongs only to beta and must never appear in alpha search results.",
+    "source": "course://beta/private-policy"
+  }
+]

@@ -1,0 +1,17 @@
+llama-index-core
+psycopg[binary,pool]
+pgvector
+fastapi
+uvicorn
+httpx
+numpy
+nbformat
+nbclient
+ipykernel
+nbconvert
+pytest
+scikit-learn
+rank-bm25
+sentence-transformers
+google-genai
+matplotlib

@@ -15,6 +15,10 @@ All notebook fixtures are invented. Offline results demonstrate software behavio
 
 [Labs 9–11](frameworks/README.md) add LangGraph parallel workers, LangChain agent middleware, and PydanticAI typed agents. They have separate pinned dependencies, student notebooks, instructor solutions, and an execution report. Use a separate environment; the commands below apply to Labs 3–8.
 
+## Practical RAG and FastAPI track
+
+[Labs 12–16](rag/README.md) use a real PostgreSQL/pgvector database, LlamaIndex ingestion, local embedding and reranking models, and FastAPI. They require a separate environment and the complete track folder. The capstone integrates the same pgvector stack, with optional backend portability afterward.
+
 ## Repaired foundation examples
 
 [Lab 3 · Manual ReAct](03_react_tools_repaired.ipynb) and [Lab 4 · Corrective RAG](04_corrective_rag_repaired.ipynb) are worked, offline examples adapted from the audited AAI[sum26] contracts. Lab 3 respects injected tool registries and bounds arithmetic and loop execution. Lab 4 fixes the search-client constructor and response fields, retains source URLs, and tests correction and abstention. The original reference project remains untouched; distribute these course-local replacements. Lab 5 supplies the complete native Gemini tool round-trip.

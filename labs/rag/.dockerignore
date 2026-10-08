@@ -1,0 +1,11 @@
+models/
+validation/
+instructor/
+tests/
+*.ipynb
+.env
+.cache/
+__pycache__/
+**/__pycache__/
+*.egg-info/
+student-results/

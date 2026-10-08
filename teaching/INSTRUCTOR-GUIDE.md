@@ -15,3 +15,7 @@ Run the [pilot](PILOT-GUIDE.md) before committing to the proposed durations. Use
 ## Additional framework practice
 
 Use [Labs 9–11](../labs/frameworks/README.md) after the core labs to teach LangGraph parallel state updates, LangChain middleware and termination, and PydanticAI semantic output validation. Each is planned for 110 minutes, with two graded implementation tasks and separate instructor solutions. Keep their environment separate from Labs 3–8. Ask students to compare architecture with the existing Agents SDK Lab 7 using the same task contracts, not incomparable model scores. The new track documents its own [validation scope](../labs/frameworks/VALIDATION.md).
+
+## Practical RAG and service engineering
+
+Use [Labs 12–16](../labs/rag/README.md) for direct practice with LlamaIndex, pgvector SQL/indexes, hybrid retrieval, a neural reranker, and FastAPI. Complete the database/model preflight before class. Require student-written SQL, routes, tests, and query-level evaluation rather than only calls to the reference package. See the [track instructor guide](../labs/rag/INSTRUCTOR-GUIDE.md) for demonstrations and assessment cases.

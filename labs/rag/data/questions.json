@@ -1,0 +1,108 @@
+[
+  {
+    "id": "q01",
+    "split": "dev",
+    "tenant": "alpha",
+    "query": "How long may I borrow a camera?",
+    "relevant": [
+      "camera-loans"
+    ]
+  },
+  {
+    "id": "q02",
+    "split": "dev",
+    "tenant": "alpha",
+    "query": "Can I keep the camera longer?",
+    "relevant": [
+      "camera-extension"
+    ]
+  },
+  {
+    "id": "q03",
+    "split": "dev",
+    "tenant": "alpha",
+    "query": "E-204",
+    "relevant": [
+      "projector-error"
+    ]
+  },
+  {
+    "id": "q04",
+    "split": "dev",
+    "tenant": "alpha",
+    "query": "When does the media desk close?",
+    "relevant": [
+      "opening-hours"
+    ]
+  },
+  {
+    "id": "q05",
+    "split": "dev",
+    "tenant": "alpha",
+    "query": "What do I do if I lose a recorder?",
+    "relevant": [
+      "lost-equipment"
+    ]
+  },
+  {
+    "id": "q06",
+    "split": "test",
+    "tenant": "alpha",
+    "query": "How long can I take a sound recorder for interviews?",
+    "relevant": [
+      "audio-loans"
+    ]
+  },
+  {
+    "id": "q07",
+    "split": "test",
+    "tenant": "alpha",
+    "query": "Do I need permission to borrow a projector?",
+    "relevant": [
+      "projector-loans"
+    ]
+  },
+  {
+    "id": "q08",
+    "split": "test",
+    "tenant": "alpha",
+    "query": "Does canceling my booking remove my loan deadline?",
+    "relevant": [
+      "reservation-cancel"
+    ]
+  },
+  {
+    "id": "q09",
+    "split": "test",
+    "tenant": "alpha",
+    "query": "Can students install their own firmware?",
+    "relevant": [
+      "firmware"
+    ]
+  },
+  {
+    "id": "q10",
+    "split": "test",
+    "tenant": "alpha",
+    "query": "What is the deadline for returning a tripod?",
+    "relevant": [
+      "tripod-loans"
+    ]
+  },
+  {
+    "id": "q11",
+    "split": "test",
+    "tenant": "alpha",
+    "query": "Can I upload medical documents to request accessible controls?",
+    "relevant": [
+      "accessibility"
+    ]
+  },
+  {
+    "id": "q12",
+    "split": "test",
+    "tenant": "alpha",
+    "query": "Who won the football match yesterday?",
+    "relevant": []
+  }
+]
